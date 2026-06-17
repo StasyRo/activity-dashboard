@@ -21,7 +21,7 @@ DATA_FILE = Path("Data.xlsx")
 GEOJSON_FILE = Path("rayons_en.geojson")
 
 
-
+clean_name(original_name)
 @st.cache_data
 def load_geojson():
     if not GEOJSON_FILE.exists():
