@@ -14,6 +14,48 @@ st.set_page_config(
 st.title("📊 Activity Dashboard")
 st.caption("Overview of participants by donor, location and activity")
 
+st.markdown(
+    """
+    <style>
+    .metric-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 22px 18px;
+        text-align: center;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        min-height: 150px;
+    }
+
+    .metric-icon {
+        font-size: 38px;
+        margin-bottom: 8px;
+    }
+
+    .metric-value {
+        font-size: 34px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.1;
+    }
+
+    .metric-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #374151;
+        margin-top: 8px;
+    }
+
+    .metric-subtitle {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 DATA_FILE = Path("Data.xlsx")
 
 
@@ -73,7 +115,67 @@ def load_data():
 
 def get_options(dataframe, column):
     return sorted(dataframe[column].dropna().astype(str).unique().tolist())
+def count_exact(dataframe, column, values):
+    clean_values = [value.lower().strip() for value in values]
 
+    return dataframe[
+        dataframe[column]
+        .fillna("")
+        .astype(str)
+        .str.lower()
+        .str.strip()
+        .isin(clean_values)
+    ].shape[0]
+
+
+def count_disability(dataframe):
+    disability_clean = (
+        dataframe["Disability"]
+        .fillna("")
+        .astype(str)
+        .str.lower()
+        .str.strip()
+    )
+
+    no_disability_values = [
+        "no",
+        "none",
+        "not specified",
+        "",
+        "nan"
+    ]
+
+    return dataframe[
+        ~disability_clean.isin(no_disability_values)
+    ].shape[0]
+
+
+def count_displaced(dataframe):
+    displacement_clean = (
+        dataframe["Displacement"]
+        .fillna("")
+        .astype(str)
+        .str.lower()
+        .str.strip()
+    )
+
+    return dataframe[
+        displacement_clean.str.contains("displaced", na=False)
+    ].shape[0]
+
+
+def render_card(icon, title, value, subtitle=""):
+    st.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-icon">{icon}</div>
+            <div class="metric-value">{value:,}</div>
+            <div class="metric-title">{title}</div>
+            <div class="metric-subtitle">{subtitle}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 def make_bar(dataframe, group_column, title):
     summary = (
@@ -210,19 +312,46 @@ if not valid_dates.empty:
 
 st.divider()
 
-col1, col2, col3, col4 = st.columns(4)
+female_count = count_exact(filtered_df, "Gender", ["female", "woman", "women"])
+male_count = count_exact(filtered_df, "Gender", ["male", "man", "men"])
+idp_count = count_displaced(filtered_df)
+pwd_count = count_disability(filtered_df)
+total_count = len(filtered_df)
 
-col1.metric("Total participants", len(filtered_df))
-col2.metric("Donors", filtered_df["Donor number"].nunique())
-col3.metric("Activities", filtered_df["Activity"].nunique())
-col4.metric("Hromadas", filtered_df["Hromada"].nunique())
+st.subheader("Key figures")
 
-col5, col6, col7, col8 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 
-col5.metric("Oblasts", filtered_df["Oblast"].nunique())
-col6.metric("Rayons", filtered_df["Rayon"].nunique())
-col7.metric("Offices", filtered_df["Office"].nunique())
-col8.metric("With disability", len(filtered_df[filtered_df["Disability"].str.lower() != "no"]))
+with col1:
+    render_card("👥", "Total participants", total_count, "All selected data")
+
+with col2:
+    render_card("👩", "Women / girls", female_count, "Gender: female")
+
+with col3:
+    render_card("👨", "Men / boys", male_count, "Gender: male")
+
+with col4:
+    render_card("🧳", "IDPs", idp_count, "Displaced people")
+
+with col5:
+    render_card("♿", "People with disabilities", pwd_count, "Disability reported")
+
+st.markdown("")
+
+col6, col7, col8, col9 = st.columns(4)
+
+with col6:
+    render_card("🏛️", "Donors", filtered_df["Donor number"].nunique(), "Unique donors")
+
+with col7:
+    render_card("📌", "Activities", filtered_df["Activity"].nunique(), "Unique activities")
+
+with col8:
+    render_card("📍", "Hromadas", filtered_df["Hromada"].nunique(), "Unique hromadas")
+
+with col9:
+    render_card("🗂️", "Rayons", filtered_df["Rayon"].nunique(), "Unique rayons")
 
 st.divider()
 
