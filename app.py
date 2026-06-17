@@ -164,14 +164,13 @@ def count_displaced(dataframe):
     ].shape[0]
 
 
-def render_card(icon, title, value, subtitle=""):
+def render_card(icon, title, value):
     st.markdown(
         f"""
         <div class="metric-card">
             <div class="metric-icon">{icon}</div>
             <div class="metric-value">{value:,}</div>
             <div class="metric-title">{title}</div>
-            <div class="metric-subtitle">{subtitle}</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -326,10 +325,10 @@ with col1:
     render_card("👥", "Total participants", total_count, "All selected data")
 
 with col2:
-    render_card("👩", "Women / girls", female_count, "Gender: female")
+    render_card("👩", "Women", female_count, "Gender: female")
 
 with col3:
-    render_card("👨", "Men / boys", male_count, "Gender: male")
+    render_card("👨", "Men", male_count, "Gender: male")
 
 with col4:
     render_card("🧳", "IDPs", idp_count, "Displaced people")
@@ -341,8 +340,7 @@ st.markdown("")
 
 col6, col7, col8, col9 = st.columns(4)
 
-with col6:
-    render_card("🏛️", "Donors", filtered_df["Donor number"].nunique(), "Unique donors")
+
 
 with col7:
     render_card("📌", "Activities", filtered_df["Activity"].nunique(), "Unique activities")
