@@ -20,8 +20,8 @@ st.caption("Overview of participants by donor, location and activity")
 DATA_FILE = Path("Data.xlsx")
 
 GEOJSON_URL = (
-    "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/"
-    "releaseData/gbOpen/UKR/ADM2/geoBoundaries-UKR-ADM2.geojson"
+    "https://raw.githubusercontent.com/slawomirmatuszak/"
+    "ukrainian_geodata/main/rayony.geojson"
 )
 
 
