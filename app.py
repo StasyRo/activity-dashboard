@@ -27,9 +27,24 @@ GEOJSON_URL = (
 
 def clean_name(value):
     value = str(value).lower().strip()
+
     value = value.replace("’", "").replace("'", "").replace("`", "").replace("ʼ", "")
-    value = re.sub(r"\b(raion|rayon|district)\b", "", value)
+
+    words_to_remove = [
+        "raion",
+        "rayon",
+        "district",
+        "skyi",
+        "skyi_raion",
+        "skyi rayon",
+        "skyi raion"
+    ]
+
+    for word in words_to_remove:
+        value = value.replace(word, "")
+
     value = re.sub(r"[^a-zа-яіїєґ0-9]+", "", value)
+
     return value
 
 
