@@ -338,17 +338,17 @@ with col5:
 
 st.markdown("")
 
-col6, col7, col8, col9 = st.columns(4)
+col6, col7, col8 = st.columns(4)
 
 
 
-with col7:
+with col6:
     render_card("📌", "Activities", filtered_df["Activity"].nunique(), "Unique activities")
 
-with col8:
+with col7:
     render_card("📍", "Hromadas", filtered_df["Hromada"].nunique(), "Unique hromadas")
 
-with col9:
+with col8:
     render_card("🗂️", "Rayons", filtered_df["Rayon"].nunique(), "Unique rayons")
 
 st.divider()
