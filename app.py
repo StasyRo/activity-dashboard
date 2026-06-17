@@ -322,19 +322,19 @@ st.subheader("Key figures")
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    render_card("👥", "Total participants", total_count, "All selected data")
+    render_card("👥", "Total participants", total_count)
 
 with col2:
-    render_card("👩", "Women", female_count, "Gender: female")
+    render_card("👩", "Women", female_count)
 
 with col3:
-    render_card("👨", "Men", male_count, "Gender: male")
+    render_card("👨", "Men", male_count)
 
 with col4:
-    render_card("🧳", "IDPs", idp_count, "Displaced people")
+    render_card("🧳", "IDPs", idp_count)
 
 with col5:
-    render_card("♿", "People with disabilities", pwd_count, "Disability reported")
+    render_card("♿", "People with disabilities", pwd_count)
 
 st.markdown("")
 
@@ -343,13 +343,13 @@ col6, col7, col8 = st.columns(4)
 
 
 with col6:
-    render_card("📌", "Activities", filtered_df["Activity"].nunique(), "Unique activities")
+    render_card("📌", "Activities", filtered_df["Activity"].nunique())
 
 with col7:
-    render_card("📍", "Hromadas", filtered_df["Hromada"].nunique(), "Unique hromadas")
+    render_card("📍", "Hromadas", filtered_df["Hromada"].nunique())
 
 with col8:
-    render_card("🗂️", "Rayons", filtered_df["Rayon"].nunique(), "Unique rayons")
+    render_card("🗂️", "Rayons", filtered_df["Rayon"].nunique())
 
 st.divider()
 
