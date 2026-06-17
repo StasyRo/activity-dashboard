@@ -28,11 +28,25 @@ def load_geojson():
         st.error("GeoJSON file rayons_en.geojson was not found.")
         st.stop()
 
-    with open(GEOJSON_FILE, "r", encoding="utf-8") as file:
-        geojson = json.load(file)
+    with open(GEOJSON_FILE, "r", encoding="utf-8-sig") as file:
+        raw_text = file.read()
+
+    st.write("GeoJSON file size:", len(raw_text), "characters")
+    st.write("First 500 characters of GeoJSON file:")
+    st.code(raw_text[:500])
+
+    try:
+        geojson = json.loads(raw_text)
+    except json.JSONDecodeError as e:
+        st.error("This file is not valid JSON / GeoJSON.")
+        st.write("JSON error:")
+        st.code(str(e))
+        st.stop()
 
     if "features" not in geojson:
-        st.error("This file is not a valid GeoJSON FeatureCollection.")
+        st.error("This file is JSON, but not GeoJSON FeatureCollection. No 'features' key found.")
+        st.write("Top-level keys:")
+        st.write(list(geojson.keys()))
         st.stop()
 
     for feature in geojson["features"]:
