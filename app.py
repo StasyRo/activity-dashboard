@@ -39,7 +39,17 @@ def load_geojson():
         geojson = json.load(response)
 
     for feature in geojson["features"]:
-        original_name = feature["properties"].get("shapeName", "")
+        props = feature["properties"]
+
+        original_name = (
+            props.get("name")
+            or props.get("NAME_2")
+            or props.get("shapeName")
+            or props.get("rayon")
+            or props.get("Rayon")
+            or ""
+        )
+
         feature["properties"]["rayon_name"] = original_name
         feature["properties"]["rayon_clean"] = clean_name(original_name)
 
