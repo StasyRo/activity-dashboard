@@ -19,10 +19,7 @@ st.caption("Overview of participants by donor, location and activity")
 
 DATA_FILE = Path("Data.xlsx")
 
-GEOJSON_URL = (
-    "https://raw.githubusercontent.com/slawomirmatuszak/"
-    "ukrainian_geodata/main/rayony.geojson"
-)
+GEOJSON_URL = "https://www.geoboundaries.org/api/current/gbOpen/UKR/ADM2/"
 
 
 def clean_name(value):
@@ -51,17 +48,21 @@ def clean_name(value):
 @st.cache_data
 def load_geojson():
     with urllib.request.urlopen(GEOJSON_URL) as response:
+        metadata = json.load(response)
+
+    geojson_url = metadata["gjDownloadURL"]
+
+    with urllib.request.urlopen(geojson_url) as response:
         geojson = json.load(response)
 
     for feature in geojson["features"]:
         props = feature["properties"]
 
         original_name = (
-            props.get("name")
+            props.get("shapeName")
+            or props.get("shapeNameEn")
+            or props.get("name")
             or props.get("NAME_2")
-            or props.get("shapeName")
-            or props.get("rayon")
-            or props.get("Rayon")
             or ""
         )
 
