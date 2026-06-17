@@ -338,7 +338,7 @@ with col5:
 
 st.markdown("")
 
-col6, col7, col8 = st.columns(4)
+col6, col7, col8 = st.columns(3)
 
 
 
