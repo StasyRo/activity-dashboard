@@ -1,6 +1,5 @@
 import json
 import re
-import urllib.request
 from pathlib import Path
 
 import pandas as pd
@@ -19,28 +18,37 @@ st.caption("Overview of participants by donor, location and activity")
 
 DATA_FILE = Path("Data.xlsx")
 
-GEOJSON_URL = "https://www.geoboundaries.org/api/current/gbOpen/UKR/ADM2/"
+GEOJSON_FILE = Path("rayons_en.geojson")
 
 
 
 @st.cache_data
 def load_geojson():
-    with urllib.request.urlopen(GEOJSON_URL) as response:
-        metadata = json.load(response)
+    if not GEOJSON_FILE.exists():
+        st.error("GeoJSON file rayons_en.geojson was not found.")
+        st.stop()
 
-    geojson_url = metadata["gjDownloadURL"]
+    with open(GEOJSON_FILE, "r", encoding="utf-8") as file:
+        geojson = json.load(file)
 
-    with urllib.request.urlopen(geojson_url) as response:
-        geojson = json.load(response)
+    if "features" not in geojson:
+        st.error("This file is not a valid GeoJSON FeatureCollection.")
+        st.stop()
 
     for feature in geojson["features"]:
-        props = feature["properties"]
+        props = feature.get("properties", {})
 
         original_name = (
-            props.get("shapeName")
-            or props.get("shapeNameEn")
-            or props.get("name")
+            props.get("Rayon")
+            or props.get("rayon")
+            or props.get("Rayon_name")
+            or props.get("rayon_name")
             or props.get("NAME_2")
+            or props.get("Name")
+            or props.get("name")
+            or props.get("shapeName")
+            or props.get("ADM2_EN")
+            or props.get("ADM2_NAME")
             or ""
         )
 
