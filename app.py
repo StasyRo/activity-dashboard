@@ -254,10 +254,10 @@ fig_map = px.choropleth(
     },
     custom_data=["Rayon_clean", "Rayon_name"],
     color_continuous_scale=[
-        [0.0, "#fff4e6"],
-        [0.5, "#f6b26b"],
-        [1.0, "#e69138"]
-    ]
+    [0.0, "#fff7ed"],
+    [0.5, "#fdba74"],
+    [1.0, "#fb923c"]
+]
 )
 
 fig_map.update_traces(
