@@ -22,28 +22,6 @@ DATA_FILE = Path("Data.xlsx")
 GEOJSON_URL = "https://www.geoboundaries.org/api/current/gbOpen/UKR/ADM2/"
 
 
-def clean_name(value):
-    value = str(value).lower().strip()
-
-    value = value.replace("’", "")
-    value = value.replace("'", "")
-    value = value.replace("`", "")
-    value = value.replace("ʼ", "")
-
-    words_to_remove = [
-        "raion",
-        "rayon",
-        "district",
-        "район"
-    ]
-
-    for word in words_to_remove:
-        value = value.replace(word, "")
-
-    value = re.sub(r"[^a-zа-яіїєґ0-9]+", "", value)
-
-    return value
-
 
 @st.cache_data
 def load_geojson():
