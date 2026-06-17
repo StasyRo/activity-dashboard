@@ -240,7 +240,7 @@ if st.session_state.selected_rayon_name:
         st.rerun()
 
 
-fig_map = px.choropleth_mapbox(
+fig_map = px.choropleth(
     map_df,
     geojson=geojson,
     locations="Rayon_clean",
@@ -249,28 +249,59 @@ fig_map = px.choropleth_mapbox(
     hover_name="Rayon_name",
     hover_data={
         "Participants": True,
-        "Rayon_clean": False
+        "Rayon_clean": False,
+        "Rayon_name": False
     },
     custom_data=["Rayon_clean", "Rayon_name"],
-    mapbox_style="carto-positron",
-    center={
-        "lat": 48.7,
-        "lon": 31.2
-    },
-    zoom=4.8,
-    opacity=0.65
+    color_continuous_scale=[
+        [0.0, "#fff4e6"],
+        [0.5, "#f6b26b"],
+        [1.0, "#e69138"]
+    ]
+)
+
+fig_map.update_traces(
+    marker_line_color="white",
+    marker_line_width=0.6
+)
+
+fig_map.update_geos(
+    fitbounds="locations",
+    visible=False,
+    showcountries=False,
+    showcoastlines=False,
+    showframe=False,
+    bgcolor="rgba(0,0,0,0)",
+    projection_type="mercator"
 )
 
 fig_map.update_layout(
-    margin={
-        "r": 0,
-        "t": 0,
-        "l": 0,
-        "b": 0
-    },
-    height=650,
-    clickmode="event+select"
+    margin={"r": 0, "t": 0, "l": 0, "b": 0},
+    height=700,
+    coloraxis_colorbar_title="Participants"
 )
+
+map_event = st.plotly_chart(
+    fig_map,
+    key="ukraine_rayon_map",
+    on_select="rerun",
+    selection_mode="points",
+    width="stretch"
+)
+
+try:
+    selected_points = map_event.selection.points
+
+    if selected_points:
+        custom_data = selected_points[0].get("customdata", [])
+
+        if custom_data:
+            st.session_state.selected_rayon_clean = custom_data[0]
+            st.session_state.selected_rayon_name = custom_data[1]
+            st.rerun()
+
+except Exception:
+    pass
 
 map_event = st.plotly_chart(
     fig_map,
