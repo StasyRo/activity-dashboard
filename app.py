@@ -37,10 +37,7 @@ def clean_name(value):
         "raion",
         "rayon",
         "district",
-        "skyi",
-        "skyi_raion",
-        "skyi rayon",
-        "skyi raion"
+        "район"
     ]
 
     for word in words_to_remove:
