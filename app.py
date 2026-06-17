@@ -215,9 +215,15 @@ geo_rayons_df = pd.DataFrame(geo_rayons).drop_duplicates()
 # Participants by rayon
 rayon_summary = (
     base_filtered_df.groupby("Rayon_clean", dropna=False)
-    .size()
-    .reset_index(name="Participants")
+    .agg(
+        Participants=("Rayon_clean", "size"),
+        Rayon_excel=("Rayon", "first")
+    )
+    .reset_index()
 )
+
+rayon_summary["Rayon_clean"] = rayon_summary["Rayon_clean"].astype(str)
+rayon_summary["Rayon_excel"] = rayon_summary["Rayon_excel"].astype(str)
 
 map_df = geo_rayons_df.merge(
     rayon_summary,
