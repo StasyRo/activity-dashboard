@@ -44,7 +44,7 @@ def clean_name(value):
 
     return value
 
-clean_name(original_name)
+
 
 @st.cache_data
 def load_geojson():
