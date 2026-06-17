@@ -12,7 +12,6 @@ st.set_page_config(
 )
 
 st.title("📊 Activity Dashboard")
-st.caption("Overview of participants by donor, location and activity")
 
 st.markdown(
     """
