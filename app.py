@@ -28,7 +28,10 @@ GEOJSON_URL = (
 def clean_name(value):
     value = str(value).lower().strip()
 
-    value = value.replace("’", "").replace("'", "").replace("`", "").replace("ʼ", "")
+    value = value.replace("’", "")
+    value = value.replace("'", "")
+    value = value.replace("`", "")
+    value = value.replace("ʼ", "")
 
     words_to_remove = [
         "raion",
@@ -135,7 +138,7 @@ def make_bar(dataframe, group_column, title):
         title=title
     )
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def make_pie(dataframe, group_column, title):
@@ -155,7 +158,7 @@ def make_pie(dataframe, group_column, title):
         title=title
     )
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
 
 df = load_data()
@@ -212,7 +215,7 @@ for feature in geojson["features"]:
 geo_rayons_df = pd.DataFrame(geo_rayons).drop_duplicates()
 
 
-# Participants by rayon
+# Participants by rayon from Excel
 rayon_summary = (
     base_filtered_df.groupby("Rayon_clean", dropna=False)
     .agg(
@@ -225,6 +228,8 @@ rayon_summary = (
 rayon_summary["Rayon_clean"] = rayon_summary["Rayon_clean"].astype(str)
 rayon_summary["Rayon_excel"] = rayon_summary["Rayon_excel"].astype(str)
 
+
+# Merge GeoJSON rayons with Excel participants
 map_df = geo_rayons_df.merge(
     rayon_summary,
     on="Rayon_clean",
@@ -233,7 +238,16 @@ map_df = geo_rayons_df.merge(
 
 map_df["Participants"] = map_df["Participants"].fillna(0).astype(int)
 
+# Hover name:
+# if rayon exists in Excel, show Excel name;
+# if not, show map name.
+map_df["Hover rayon"] = map_df["Rayon_excel"].fillna(map_df["Rayon_name"])
+map_df["Hover rayon"] = map_df["Hover rayon"].replace("nan", pd.NA)
+map_df["Hover rayon"] = map_df["Hover rayon"].fillna(map_df["Rayon_name"])
+map_df["Hover rayon"] = map_df["Hover rayon"].astype(str)
 
+
+# Map
 st.subheader("Ukraine map by rayon")
 st.caption("Click on a rayon to filter all charts below.")
 
@@ -246,29 +260,27 @@ if st.session_state.selected_rayon_name:
         st.rerun()
 
 
+max_participants = max(1, int(map_df["Participants"].max()))
+
 fig_map = px.choropleth(
     map_df,
     geojson=geojson,
     locations="Rayon_clean",
     featureidkey="properties.rayon_clean",
     color="Participants",
-    hover_name="Rayon_name",
-    hover_data={
-        "Participants": True,
-        "Rayon_clean": False,
-        "Rayon_name": False
-    },
-    custom_data=["Rayon_clean", "Rayon_name"],
+    custom_data=["Rayon_clean", "Hover rayon", "Participants"],
     color_continuous_scale=[
-    [0.0, "#fff7ed"],
-    [0.5, "#fdba74"],
-    [1.0, "#fb923c"]
-]
+        [0.0, "#fff7ed"],
+        [0.5, "#fdba74"],
+        [1.0, "#fb923c"]
+    ],
+    range_color=(0, max_participants)
 )
 
 fig_map.update_traces(
     marker_line_color="white",
-    marker_line_width=0.6
+    marker_line_width=0.6,
+    hovertemplate="<b>%{customdata[1]}</b><br>Participants: %{customdata[2]}<extra></extra>"
 )
 
 fig_map.update_geos(
@@ -292,29 +304,7 @@ map_event = st.plotly_chart(
     key="ukraine_rayon_map",
     on_select="rerun",
     selection_mode="points",
-    width="stretch"
-)
-
-try:
-    selected_points = map_event.selection.points
-
-    if selected_points:
-        custom_data = selected_points[0].get("customdata", [])
-
-        if custom_data:
-            st.session_state.selected_rayon_clean = custom_data[0]
-            st.session_state.selected_rayon_name = custom_data[1]
-            st.rerun()
-
-except Exception:
-    pass
-
-map_event = st.plotly_chart(
-    fig_map,
-    key="ukraine_rayon_map",
-    on_select="rerun",
-    selection_mode="points",
-    width="stretch"
+    use_container_width=True
 )
 
 try:
@@ -368,10 +358,33 @@ make_pie(filtered_df, "Displacement", "Displacement status")
 make_pie(filtered_df, "Disability", "Disability status")
 
 st.subheader("Detailed data")
-st.dataframe(filtered_df.drop(columns=["Rayon_clean"]), width="stretch")
+st.dataframe(
+    filtered_df.drop(columns=["Rayon_clean"]),
+    use_container_width=True
+)
 
 with st.expander("Technical check"):
     st.write("Total rows in file:", len(df))
     st.write("Rows after filters:", len(filtered_df))
     st.write("Selected rayon:", st.session_state.selected_rayon_name)
     st.write("Columns:", list(df.columns))
+
+    st.subheader("Rayon matching check")
+
+    excel_rayons = (
+        df[["Rayon", "Rayon_clean"]]
+        .drop_duplicates()
+        .sort_values("Rayon")
+    )
+
+    map_rayons = (
+        map_df[["Rayon_name", "Hover rayon", "Rayon_clean", "Participants"]]
+        .drop_duplicates()
+        .sort_values("Hover rayon")
+    )
+
+    st.write("Rayons from Excel:")
+    st.dataframe(excel_rayons, use_container_width=True)
+
+    st.write("Rayons from map:")
+    st.dataframe(map_rayons, use_container_width=True)
