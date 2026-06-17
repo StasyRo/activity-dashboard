@@ -21,7 +21,7 @@ DATA_FILE = Path("Data.xlsx")
 GEOJSON_FILE = Path("rayons_en.geojson")
 
 
-clean_name(original_name)
+
 def clean_name(value):
     value = str(value).lower().strip()
 
@@ -43,6 +43,8 @@ def clean_name(value):
     value = re.sub(r"[^a-zа-яіїєґ0-9]+", "", value)
 
     return value
+
+clean_name(original_name)
 
 @st.cache_data
 def load_geojson():
