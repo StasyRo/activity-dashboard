@@ -183,7 +183,7 @@ for i in range(len(ring) - 1):
     x1, y1 = ring[i][0], ring[i][1]
     x2, y2 = ring[i + 1][0], ring[i + 1][1]
     area += (x1 * y2) - (x2 * y1)
-
+    
     return area / 2
 
 def ensure_closed_ring(ring):
