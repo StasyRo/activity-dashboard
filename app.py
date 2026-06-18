@@ -217,7 +217,7 @@ return fixed_rings
 
 def fix_geojson_winding(geojson):
     for feature in geojson["features"]:
-    geometry = feature.get("geometry")
+        geometry = feature.get("geometry")
 
     if not geometry:
         continue
