@@ -13,6 +13,17 @@ st.set_page_config(
 )
 
 DATA_FILE = Path("Data.xlsx")
+CHART_COLOR = "#F4C21A"
+
+PIE_COLORS = [
+    "#F4C21A",
+    "#F7CF4A",
+    "#F9DB74",
+    "#FBE7A0",
+    "#FDF0C8",
+    "#E5A50A",
+    "#C98D08"
+]
 
 
 st.markdown(
@@ -256,7 +267,13 @@ def make_bar(dataframe, group_column, title):
         x=group_column,
         y="Participants",
         text="Participants",
-        title=title
+        title=title,
+        color_discrete_sequence=[CHART_COLOR]
+    )
+
+    fig.update_traces(
+        marker_line_color="#D4A514",
+        marker_line_width=0.8
     )
 
     fig.update_layout(
@@ -286,7 +303,13 @@ def make_horizontal_bar(dataframe, group_column, title, top_n=20):
         y=group_column,
         text="Participants",
         title=title,
-        orientation="h"
+        orientation="h",
+        color_discrete_sequence=[CHART_COLOR]
+    )
+
+    fig.update_traces(
+        marker_line_color="#D4A514",
+        marker_line_width=0.8
     )
 
     fig.update_layout(
@@ -314,7 +337,13 @@ def make_pie(dataframe, group_column, title):
         summary,
         names=group_column,
         values="Participants",
-        title=title
+        title=title,
+        color_discrete_sequence=PIE_COLORS
+    )
+
+    fig.update_traces(
+        textinfo="percent+label",
+        marker=dict(line=dict(color="white", width=1))
     )
 
     fig.update_layout(
@@ -496,10 +525,34 @@ with row3_col1:
     render_card("♿", "People with disabilities", pwd_count)
 
 with row3_col2:
-    render_card("💰", "Donors", filtered_df["Donor number"].nunique())
+    st.empty()
 
 with row3_col3:
-    render_card("📌", "Activities", filtered_df["Activity"].nunique())
+    st.empty()
+
+
+row4_col1, row4_col2, row4_col3 = st.columns(3)
+
+with row4_col1:
+    render_card("💰", "Donors", filtered_df["Donor number"].nunique())
+
+with row4_col2:
+    st.empty()
+
+with row4_col3:
+    st.empty()
+
+
+row5_col1, row5_col2, row5_col3 = st.columns(3)
+
+with row5_col1:
+    render_card("📋", "Activities", filtered_df["Activity"].nunique())
+
+with row5_col2:
+    st.empty()
+
+with row5_col3:
+    st.empty()
 
 
 st.divider()
