@@ -177,7 +177,7 @@ def load_data():
     return data
 
 def ring_area(ring):
-area = 0.0
+    area = 0.0
 
 for i in range(len(ring) - 1):
     x1, y1 = ring[i][0], ring[i][1]
