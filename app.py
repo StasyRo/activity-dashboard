@@ -489,7 +489,6 @@ tab_map, tab_overview, tab_location, tab_profile, tab_data = st.tabs([
     "Overview",
     "Location",
     "Profile",
-    "Detailed data"
 ])
 
 
@@ -528,16 +527,3 @@ with tab_profile:
     make_bar(filtered_df, "Disability", "Disability status")
     make_bar(filtered_df, "ActDis", "Clients by age/disability category")
 
-
-with tab_data:
-    st.subheader("Detailed data")
-    st.dataframe(filtered_df, use_container_width=True)
-
-    csv = filtered_df.to_csv(index=False).encode("utf-8-sig")
-
-    st.download_button(
-        label="Download filtered data as CSV",
-        data=csv,
-        file_name="filtered_activity_data.csv",
-        mime="text/csv"
-    )
