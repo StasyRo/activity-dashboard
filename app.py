@@ -168,9 +168,7 @@ def load_data():
     return data
 
 
-def normalize_text(value):
-    value = str(value).lower().strip()
-    return value
+
 
 
 def get_options(dataframe, column):
