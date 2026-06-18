@@ -271,10 +271,7 @@ def make_bar(dataframe, group_column, title):
         color_discrete_sequence=[CHART_COLOR]
     )
 
-    fig.update_traces(
-        marker_line_color="#D4A514",
-        marker_line_width=0.8
-    )
+    
 
    fig.update_traces(
     textfont=dict(color="black", size=13)
