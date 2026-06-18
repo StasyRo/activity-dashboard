@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -13,6 +12,7 @@ st.set_page_config(
 )
 
 DATA_FILE = Path("Data.xlsx")
+
 CHART_COLOR = "#F4C21A"
 
 PIE_COLORS = [
@@ -82,16 +82,6 @@ st.markdown(
         font-size: 13px;
         color: #6b7280;
         margin-bottom: 16px;
-    }
-
-    .filter-section {
-        font-size: 14px;
-        font-weight: 700;
-        color: #374151;
-        margin-top: 16px;
-        margin-bottom: 4px;
-        padding-top: 10px;
-        border-top: 1px solid #e5e7eb;
     }
 
     .map-placeholder {
@@ -209,12 +199,10 @@ def count_gender(dataframe, gender_value):
         .str.strip()
     )
 
-    return dataframe[
-        gender_clean == gender_value.lower()
-    ].shape[0]
+    return dataframe[gender_clean == gender_value.lower()].shape[0]
 
 
-def count_displacement(dataframe, keywords):
+def count_displacement_exact(dataframe, values):
     displacement_clean = (
         dataframe["Displacement"]
         .fillna("")
@@ -223,11 +211,9 @@ def count_displacement(dataframe, keywords):
         .str.strip()
     )
 
-    pattern = "|".join(keywords)
+    clean_values = [value.lower().strip() for value in values]
 
-    return dataframe[
-        displacement_clean.str.contains(pattern, na=False)
-    ].shape[0]
+    return dataframe[displacement_clean.isin(clean_values)].shape[0]
 
 
 def count_disability(dataframe):
@@ -247,9 +233,7 @@ def count_disability(dataframe):
         "nan"
     ]
 
-    return dataframe[
-        ~disability_clean.isin(no_disability_values)
-    ].shape[0]
+    return dataframe[~disability_clean.isin(no_disability_values)].shape[0]
 
 
 def make_bar(dataframe, group_column, title):
@@ -271,28 +255,28 @@ def make_bar(dataframe, group_column, title):
         color_discrete_sequence=[CHART_COLOR]
     )
 
-    
+    fig.update_traces(
+        marker_line_color="#D4A514",
+        marker_line_width=0.8,
+        textfont=dict(color="black", size=13)
+    )
 
-   fig.update_traces(
-    textfont=dict(color="black", size=13)
-)
-
-fig.update_layout(
-    xaxis_title="",
-    yaxis_title="Participants",
-    title_font_size=20,
-    title_font_color="black",
-    font=dict(color="black"),
-    xaxis=dict(
-        tickfont=dict(color="black"),
-        titlefont=dict(color="black")
-    ),
-    yaxis=dict(
-        tickfont=dict(color="black"),
-        titlefont=dict(color="black")
-    ),
-    margin=dict(l=20, r=20, t=60, b=20)
-)
+    fig.update_layout(
+        xaxis_title="",
+        yaxis_title="Participants",
+        title_font_size=20,
+        title_font_color="black",
+        font=dict(color="black"),
+        xaxis=dict(
+            tickfont=dict(color="black"),
+            titlefont=dict(color="black")
+        ),
+        yaxis=dict(
+            tickfont=dict(color="black"),
+            titlefont=dict(color="black")
+        ),
+        margin=dict(l=20, r=20, t=60, b=20)
+    )
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -320,31 +304,27 @@ def make_horizontal_bar(dataframe, group_column, title, top_n=20):
 
     fig.update_traces(
         marker_line_color="#D4A514",
-        marker_line_width=0.8
+        marker_line_width=0.8,
+        textfont=dict(color="black", size=13)
     )
 
-    fig.update_traces(
-    textfont=dict(color="black", size=13)
-)
-
-fig.update_layout(
-    yaxis={"categoryorder": "total ascending"},
-    xaxis_title="Participants",
-    yaxis_title="",
-    title_font_size=20,
-    title_font_color="black",
-    font=dict(color="black"),
-    xaxis=dict(
-        tickfont=dict(color="black"),
-        titlefont=dict(color="black")
-    ),
-    yaxis=dict(
-        tickfont=dict(color="black"),
-        titlefont=dict(color="black"),
-        categoryorder="total ascending"
-    ),
-    margin=dict(l=20, r=20, t=60, b=20)
-)
+    fig.update_layout(
+        xaxis_title="Participants",
+        yaxis_title="",
+        title_font_size=20,
+        title_font_color="black",
+        font=dict(color="black"),
+        xaxis=dict(
+            tickfont=dict(color="black"),
+            titlefont=dict(color="black")
+        ),
+        yaxis=dict(
+            tickfont=dict(color="black"),
+            titlefont=dict(color="black"),
+            categoryorder="total ascending"
+        ),
+        margin=dict(l=20, r=20, t=60, b=20)
+    )
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -368,20 +348,20 @@ def make_pie(dataframe, group_column, title):
     )
 
     fig.update_traces(
-    textinfo="percent+label",
-    textfont=dict(color="black", size=13),
-    marker=dict(line=dict(color="white", width=1))
-)
+        textinfo="percent+label",
+        textfont=dict(color="black", size=13),
+        marker=dict(line=dict(color="white", width=1))
+    )
 
-fig.update_layout(
-    title_font_size=20,
-    title_font_color="black",
-    font=dict(color="black"),
-    legend=dict(
-        font=dict(color="black")
-    ),
-    margin=dict(l=20, r=20, t=60, b=20)
-)
+    fig.update_layout(
+        title_font_size=20,
+        title_font_color="black",
+        font=dict(color="black"),
+        legend=dict(
+            font=dict(color="black")
+        ),
+        margin=dict(l=20, r=20, t=60, b=20)
+    )
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -523,9 +503,20 @@ total_count = len(filtered_df)
 female_count = count_gender(filtered_df, "female")
 male_count = count_gender(filtered_df, "male")
 
-local_count = count_displacement(filtered_df, ["non_displaced", "local", "host"])
-idp_count = count_displacement(filtered_df, ["displaced"])
-returnee_count = count_displacement(filtered_df, ["returnee", "return"])
+local_count = count_displacement_exact(
+    filtered_df,
+    ["non_displaced", "local", "host"]
+)
+
+idp_count = count_displacement_exact(
+    filtered_df,
+    ["displaced_person", "idp", "internally_displaced_person"]
+)
+
+returnee_count = count_displacement_exact(
+    filtered_df,
+    ["returnee", "return"]
+)
 
 pwd_count = count_disability(filtered_df)
 
@@ -568,14 +559,28 @@ with row3_col3:
     st.empty()
 
 
-row4_col1, row4_col2 = st.columns(2)
+row4_col1, row4_col2, row4_col3 = st.columns(3)
 
 with row4_col1:
-    render_card("💰", "Donors", filtered_df["Donor number"].nunique())
+    st.empty()
 
 with row4_col2:
-    render_card("📋", "Activities", filtered_df["Activity"].nunique())
+    render_card("💰", "Donors", filtered_df["Donor number"].nunique())
 
+with row4_col3:
+    st.empty()
+
+
+row5_col1, row5_col2, row5_col3 = st.columns(3)
+
+with row5_col1:
+    st.empty()
+
+with row5_col2:
+    render_card("🤝", "Activities", filtered_df["Activity"].nunique())
+
+with row5_col3:
+    st.empty()
 
 
 st.divider()
