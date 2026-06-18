@@ -164,16 +164,17 @@ def load_data():
 
     for col in text_columns:
         data[col] = (
-        data[col]
-        .fillna("Not specified")
-        .astype(str)
-        .str.strip()
-        .str.replace("_", " ", regex=False)
-    )
+            data[col]
+            .fillna("Not specified")
+            .astype(str)
+            .str.strip()
+            .str.replace("_", " ", regex=False)
+        )
 
     data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
 
     return data
+
 
 @st.cache_data
 def load_geojson():
@@ -181,76 +182,71 @@ def load_geojson():
         st.error(f"GeoJSON file {GEOJSON_FILE} was not found.")
         st.stop()
 
-with open(GEOJSON_FILE, "r", encoding="utf-8-sig") as file:
-    raw_text = file.read().strip()
+    with open(GEOJSON_FILE, "r", encoding="utf-8-sig") as file:
+        raw_text = file.read().strip()
 
-if not raw_text:
-    st.error(f"The file {GEOJSON_FILE} is empty.")
-    st.stop()
+    if not raw_text:
+        st.error(f"The file {GEOJSON_FILE} is empty.")
+        st.stop()
 
-if raw_text.startswith("<"):
-    st.error(
-        f"The file {GEOJSON_FILE} looks like an HTML page, not a GeoJSON file."
-    )
-    st.write("You probably uploaded a GitHub page instead of the raw GeoJSON file.")
-    st.stop()
+    if raw_text.startswith("<"):
+        st.error(f"The file {GEOJSON_FILE} looks like an HTML page, not a GeoJSON file.")
+        st.write("You probably uploaded a GitHub page instead of the raw GeoJSON file.")
+        st.stop()
 
-try:
-    geojson_raw = json.loads(raw_text)
-except json.JSONDecodeError as error:
-    st.error(f"The file {GEOJSON_FILE} is not valid JSON / GeoJSON.")
-    st.write(f"JSON error: line {error.lineno}, column {error.colno}")
-    st.write("First characters of the file:")
-    st.code(raw_text[:300])
-    st.stop()
+    try:
+        geojson_raw = json.loads(raw_text)
+    except json.JSONDecodeError as error:
+        st.error(f"The file {GEOJSON_FILE} is not valid JSON / GeoJSON.")
+        st.write(f"JSON error: line {error.lineno}, column {error.colno}")
+        st.write("First characters of the file:")
+        st.code(raw_text[:300])
+        st.stop()
 
-if isinstance(geojson_raw, dict) and "features" in geojson_raw:
-    geojson = geojson_raw
+    if isinstance(geojson_raw, dict) and "features" in geojson_raw:
+        geojson = geojson_raw
+    elif isinstance(geojson_raw, list):
+        geojson = {
+            "type": "FeatureCollection",
+            "features": geojson_raw
+        }
+    elif isinstance(geojson_raw, dict) and geojson_raw.get("type") == "Feature":
+        geojson = {
+            "type": "FeatureCollection",
+            "features": [geojson_raw]
+        }
+    else:
+        st.error("The map file is not a valid GeoJSON FeatureCollection.")
+        st.write("Expected structure:")
+        st.code('{"type": "FeatureCollection", "features": [...]}')
+        st.write("Your file has this structure:")
+        st.write(geojson_raw.keys() if isinstance(geojson_raw, dict) else type(geojson_raw))
+        st.stop()
 
-elif isinstance(geojson_raw, list):
-    geojson = {
-        "type": "FeatureCollection",
-        "features": geojson_raw
-    }
+    if not geojson.get("features"):
+        st.error("GeoJSON file has no features.")
+        st.stop()
 
-elif isinstance(geojson_raw, dict) and geojson_raw.get("type") == "Feature":
-    geojson = {
-        "type": "FeatureCollection",
-        "features": [geojson_raw]
-    }
+    for feature in geojson["features"]:
+        props = feature.get("properties", {})
 
-else:
-    st.error("The map file is not a valid GeoJSON FeatureCollection.")
-    st.write("Expected structure:")
-    st.code('{"type": "FeatureCollection", "features": [...]}')
-    st.write("Your file has this structure:")
-    st.write(geojson_raw.keys() if isinstance(geojson_raw, dict) else type(geojson_raw))
-    st.stop()
+        original_name = (
+            props.get("Rayon")
+            or props.get("rayon")
+            or props.get("rayon_name")
+            or props.get("name")
+            or props.get("Name")
+            or props.get("NAME_2")
+            or props.get("shapeName")
+            or props.get("ADM2_EN")
+            or props.get("ADM2_NAME")
+            or ""
+        )
 
-if not geojson.get("features"):
-    st.error("GeoJSON file has no features.")
-    st.stop()
+        feature["properties"]["rayon_name"] = str(original_name).strip()
+        feature["properties"]["rayon_key"] = str(original_name).strip().lower()
 
-for feature in geojson["features"]:
-    props = feature.get("properties", {})
-
-    original_name = (
-        props.get("Rayon")
-        or props.get("rayon")
-        or props.get("rayon_name")
-        or props.get("name")
-        or props.get("Name")
-        or props.get("NAME_2")
-        or props.get("shapeName")
-        or props.get("ADM2_EN")
-        or props.get("ADM2_NAME")
-        or ""
-    )
-
-    feature["properties"]["rayon_name"] = str(original_name).strip()
-    feature["properties"]["rayon_key"] = str(original_name).strip().lower()
-
-return geojson
+    return geojson
 
 
 def build_map_data(dataframe, geojson):
@@ -328,6 +324,7 @@ def show_map(dataframe, geojson):
 
     st.plotly_chart(fig, use_container_width=True)
 
+
 def get_options(dataframe, column):
     return sorted(dataframe[column].dropna().astype(str).unique().tolist())
 
@@ -348,22 +345,22 @@ def render_card(icon, title, value):
 def count_gender(dataframe, gender_value):
     return dataframe[dataframe["Gender"] == gender_value].shape[0]
 
+
 def count_displacement_exact(dataframe, values):
     return dataframe[dataframe["Displacement"].isin(values)].shape[0]
 
+
 def count_disability(dataframe):
     no_disability_values = [
-"No",
-"no",
-"None",
-"none",
-"Not specified",
-""
-]
+        "No",
+        "no",
+        "None",
+        "none",
+        "Not specified",
+        ""
+    ]
 
     return dataframe[~dataframe["Disability"].isin(no_disability_values)].shape[0]
-
-
 
 
 def make_bar(dataframe, group_column, title, top_n=None):
@@ -418,7 +415,6 @@ def make_bar(dataframe, group_column, title, top_n=None):
 
 
 df = load_data()
-
 geojson = load_geojson()
 
 
@@ -665,4 +661,3 @@ with tab_profile:
     make_bar(filtered_df, "Displacement", "Displacement status")
     make_bar(filtered_df, "Disability", "Disability status")
     make_bar(filtered_df, "ActDis", "Clients by age/disability category")
-
