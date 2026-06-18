@@ -193,7 +193,7 @@ def ensure_closed_ring(ring):
 return ring
 
 def fix_polygon_rings(rings):
-if not rings:
+    if not rings:
 return rings
 
 fixed_rings = []
@@ -216,8 +216,8 @@ for hole in rings[1:]:
 return fixed_rings
 
 def fix_geojson_winding(geojson):
-for feature in geojson["features"]:
-geometry = feature.get("geometry")
+    for feature in geojson["features"]:
+    geometry = feature.get("geometry")
 
     if not geometry:
         continue
