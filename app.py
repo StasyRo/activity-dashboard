@@ -186,7 +186,7 @@ st.markdown(
     <div class="hero-card">
         <div class="main-title">📊 Activity Dashboard</div>
         <div class="main-subtitle">
-            Overview of clients, received EUR amount, donors, locations and activities
+            Overview of clients, received USDT amount, donors, locations and activities
         </div>
     </div>
     """,
@@ -213,7 +213,7 @@ def load_data():
         "Rayon",
         "ActDis",
         "Activity",
-        "Receive Amount EUR"
+        "Receive Amount USDT"
     ]
 
     missing_columns = [col for col in required_columns if col not in data.columns]
@@ -248,8 +248,8 @@ def load_data():
 
     data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
 
-    data["Receive Amount EUR"] = pd.to_numeric(
-        data["Receive Amount EUR"],
+    data["Receive Amount USDT"] = pd.to_numeric(
+        data["Receive Amount USDT"],
         errors="coerce"
     ).fillna(0)
 
@@ -388,7 +388,7 @@ def format_number(value):
     return f"{value:,.0f}"
 
 
-def format_eur(value):
+def format_usdt(value):
     return f"€{value:,.0f}"
 
 
@@ -442,8 +442,8 @@ def make_bar(dataframe, group_column, title, value_column=None, top_n=None, y_ti
             .sort_values("Value", ascending=False)
         )
         text_template = "€%{y:,.0f}"
-        y_axis_title = y_title or "EUR"
-        hover_template = "<b>%{x}</b><br>EUR: €%{y:,.0f}<extra></extra>"
+        y_axis_title = y_title or "USDT"
+        hover_template = "<b>%{x}</b><br>USDT: €%{y:,.0f}<extra></extra>"
     else:
         summary = (
             dataframe.groupby(group_column, dropna=False)
@@ -527,8 +527,8 @@ def make_horizontal_bar(dataframe, group_column, title, value_column=None, top_n
             .head(top_n)
         )
         text_template = "€%{x:,.0f}"
-        x_axis_title = x_title or "EUR"
-        hover_template = "<b>%{y}</b><br>EUR: €%{x:,.0f}<extra></extra>"
+        x_axis_title = x_title or "USDT"
+        hover_template = "<b>%{y}</b><br>USDT: €%{x:,.0f}<extra></extra>"
     else:
         summary = (
             dataframe.groupby(group_column, dropna=False)
@@ -607,7 +607,7 @@ def build_map_data(dataframe, geojson):
         dataframe.groupby("Rayon", dropna=False)
         .agg(
             Clients=("Rayon", "size"),
-            Amount_EUR=("Receive Amount EUR", "sum")
+            Amount_USDT=("Receive Amount USDT", "sum")
         )
         .reset_index()
     )
@@ -631,7 +631,7 @@ def build_map_data(dataframe, geojson):
     )
 
     map_df["Clients"] = map_df["Clients"].fillna(0).astype(int)
-    map_df["Amount_EUR"] = map_df["Amount_EUR"].fillna(0)
+    map_df["Amount_USDT"] = map_df["Amount_USDT"].fillna(0)
     map_df["Rayon"] = map_df["Rayon"].fillna(map_df["rayon_name"])
 
     return map_df
@@ -691,11 +691,11 @@ def show_map(dataframe, geojson):
                 marker_line_width=0.7,
                 colorbar_title="Clients",
                 text=active_df["Rayon"],
-                customdata=active_df[["Amount_EUR"]],
+                customdata=active_df[["Amount_USDT"]],
                 hovertemplate=(
                     "<b>%{text}</b><br>"
                     "Clients: %{z:,.0f}<br>"
-                    "EUR: €%{customdata[0]:,.0f}"
+                    "USDT: €%{customdata[0]:,.0f}"
                     "<extra></extra>"
                 )
             )
@@ -917,7 +917,7 @@ returnee_count = count_displacement_exact(
 
 pwd_count = count_disability(filtered_df)
 
-total_eur = filtered_df["Receive Amount EUR"].sum()
+total_usdt = filtered_df["Receive Amount USDT"].sum()
 
 
 st.markdown('<div class="section-title">Key figures</div>', unsafe_allow_html=True)
@@ -930,7 +930,7 @@ with impact1:
     render_card("👥", "Total Clients", total_count)
 
 with impact2:
-    render_card("💶", "Total received EUR", format_eur(total_eur))
+    render_card("💶", "Total received USDT", format_usdt(total_usdt))
 
 
 st.markdown('<div class="group-title">Client profile</div>', unsafe_allow_html=True)
@@ -983,7 +983,7 @@ if filtered_df.empty:
 tab_map, tab_overview, tab_money, tab_location, tab_profile = st.tabs([
     "Map",
     "Overview",
-    "EUR analysis",
+    "USDT analysis",
     "Location",
     "Profile"
 ])
@@ -1016,19 +1016,19 @@ with tab_money:
         make_bar(
             filtered_df,
             "Donor number",
-            "Received EUR by donor",
-            value_column="Receive Amount EUR",
-            y_title="EUR"
+            "Received USDT by donor",
+            value_column="Receive Amount USDT",
+            y_title="USDT"
         )
 
     with right_col:
         make_horizontal_bar(
             filtered_df,
             "Activity",
-            "Received EUR by activity",
-            value_column="Receive Amount EUR",
+            "Received USDT by activity",
+            value_column="Receive Amount USDT",
             top_n=15,
-            x_title="EUR"
+            x_title="USDT"
         )
 
     left_col2, right_col2 = st.columns(2)
@@ -1037,19 +1037,19 @@ with tab_money:
         make_bar(
             filtered_df,
             "Oblast",
-            "Received EUR by oblast",
-            value_column="Receive Amount EUR",
-            y_title="EUR"
+            "Received USDT by oblast",
+            value_column="Receive Amount USDT",
+            y_title="USDT"
         )
 
     with right_col2:
         make_horizontal_bar(
             filtered_df,
             "Rayon",
-            "Received EUR by rayon",
-            value_column="Receive Amount EUR",
+            "Received USDT by rayon",
+            value_column="Receive Amount USDT",
             top_n=15,
-            x_title="EUR"
+            x_title="USDT"
         )
 
 
