@@ -502,17 +502,17 @@ male_count = count_gender(filtered_df, "male")
 
 local_count = count_displacement_exact(
     filtered_df,
-    ["non_displaced", "non-displaced", "local", "host"]
+    ["local_community"]
 )
 
 idp_count = count_displacement_exact(
     filtered_df,
-    ["displaced_person", "displaced person", "idp", "internally_displaced_person"]
+    ["displaced_person"]
 )
 
 returnee_count = count_displacement_exact(
     filtered_df,
-    ["returnee", "return"]
+    ["returnees"]
 )
 
 pwd_count = count_disability(filtered_df)
