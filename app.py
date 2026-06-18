@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 DATA_FILE = Path("Data.xlsx")
-GEOJSON_FILE = Path("rayons_en.geojson")
+GEOJSON_FILE = Path("rayons_en2.geojson")
 SHEET_NAME = "TotalF"
 
 CHART_COLOR = "#F4C21A"
@@ -36,72 +36,82 @@ st.markdown(
     }
 
     .hero-card {
-        background: linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #fef3c7 100%);
+        background: linear-gradient(135deg, #fff7ed 0%, #ffffff 58%, #fef3c7 100%);
         border: 1px solid #fed7aa;
-        border-radius: 24px;
-        padding: 28px 30px;
-        margin-bottom: 22px;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        border-radius: 22px;
+        padding: 18px 24px;
+        margin-bottom: 18px;
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
     }
 
     .main-title {
-        font-size: 38px;
+        font-size: 32px;
         font-weight: 900;
         color: #111827;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
         letter-spacing: -0.03em;
     }
 
     .main-subtitle {
-        font-size: 15px;
+        font-size: 14px;
         color: #6b7280;
         margin-bottom: 0px;
     }
 
     .section-title {
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 850;
         color: #111827;
-        margin-top: 8px;
-        margin-bottom: 14px;
+        margin-top: 6px;
+        margin-bottom: 10px;
+    }
+
+    .group-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #374151;
+        margin-top: 10px;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
 
     .metric-card {
         background: #ffffff;
         border: 1px solid #e5e7eb;
-        border-top: 5px solid #F4C21A;
-        border-radius: 20px;
-        padding: 20px 16px;
+        border-left: 4px solid #F4C21A;
+        border-radius: 16px;
+        padding: 11px 12px;
         text-align: left;
-        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
-        min-height: 128px;
-        margin-bottom: 14px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.055);
+        min-height: 78px;
+        margin-bottom: 8px;
     }
 
     .metric-top {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
+        gap: 7px;
+        margin-bottom: 5px;
     }
 
     .metric-icon {
-        font-size: 30px;
+        font-size: 19px;
         line-height: 1;
     }
 
     .metric-title {
-        font-size: 14px;
-        font-weight: 700;
-        color: #4b5563;
-        line-height: 1.2;
+        font-size: 11.5px;
+        font-weight: 750;
+        color: #6b7280;
+        line-height: 1.15;
     }
 
     .metric-value {
-        font-size: 32px;
+        font-size: 23px;
         font-weight: 900;
         color: #111827;
-        line-height: 1.1;
+        line-height: 1.05;
         letter-spacing: -0.03em;
     }
 
@@ -617,7 +627,7 @@ def show_map(dataframe, geojson):
                 <div class="map-placeholder-icon">🗺️</div>
                 <div class="map-placeholder-title">Map file is not ready</div>
                 <div class="map-placeholder-text">
-                    Please check that rayons_en.geojson is a valid GeoJSON file.
+                    Please check that rayons_en2.geojson is a valid GeoJSON file.
                 </div>
             </div>
             """,
@@ -890,60 +900,59 @@ returnee_count = count_displacement_exact(
 pwd_count = count_disability(filtered_df)
 
 total_eur = filtered_df["Receive Amount EUR"].sum()
-cash_df = filtered_df[
-filtered_df["Activity"] == "Cash for Protection"
-]
 
-cash_count = len(cash_df)
-total_cash_eur = cash_df["Receive Amount EUR"].sum()
-average_cash_eur = cash_df["Receive Amount EUR"].mean() if cash_count > 0 else 0
-median_cash_eur = cash_df["Receive Amount EUR"].median() if cash_count > 0 else 0
 
 st.markdown('<div class="section-title">Key figures</div>', unsafe_allow_html=True)
 
-kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+st.markdown('<div class="group-title">Impact summary</div>', unsafe_allow_html=True)
 
-with kpi1:
+impact1, impact2 = st.columns(2)
+
+with impact1:
     render_card("👥", "Total Clients", total_count)
 
-with kpi2:
+with impact2:
     render_card("💶", "Total received EUR", format_eur(total_eur))
 
-with kpi3:
-    render_card("📊", "Average EUR per client", format_eur(average_cash_eur))
 
-with kpi4:
-    render_card("🎯", "Median EUR per client", format_eur(median_cash_eur))
+st.markdown('<div class="group-title">Client profile</div>', unsafe_allow_html=True)
 
+profile1, profile2, profile3, profile4, profile5, profile6 = st.columns(6)
 
-kpi5, kpi6, kpi7, kpi8 = st.columns(4)
-
-with kpi5:
+with profile1:
     render_card("👩", "Women", female_count)
 
-with kpi6:
+with profile2:
     render_card("👨", "Men", male_count)
 
-with kpi7:
-    render_card("💰", "Donors", filtered_df["Donor number"].nunique())
-
-with kpi8:
-    render_card("📋", "Activities", filtered_df["Activity"].nunique())
-
-
-kpi9, kpi10, kpi11, kpi12 = st.columns(4)
-
-with kpi9:
+with profile3:
     render_card("🏠", "Local people", local_count)
 
-with kpi10:
+with profile4:
     render_card("🧳", "IDPs", idp_count)
 
-with kpi11:
+with profile5:
     render_card("↩️", "Returnees", returnee_count)
 
-with kpi12:
+with profile6:
     render_card("♿", "People with disabilities", pwd_count)
+
+
+st.markdown('<div class="group-title">Coverage</div>', unsafe_allow_html=True)
+
+coverage1, coverage2, coverage3, coverage4 = st.columns(4)
+
+with coverage1:
+    render_card("💰", "Donors", filtered_df["Donor number"].nunique())
+
+with coverage2:
+    render_card("📋", "Activities", filtered_df["Activity"].nunique())
+
+with coverage3:
+    render_card("📍", "Oblasts", filtered_df["Oblast"].nunique())
+
+with coverage4:
+    render_card("🗺️", "Rayons", filtered_df["Rayon"].nunique())
 
 
 st.divider()
