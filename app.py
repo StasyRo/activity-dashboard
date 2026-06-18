@@ -187,8 +187,8 @@ for i in range(len(ring) - 1):
 return area / 2
 
 def ensure_closed_ring(ring):
-if ring and ring[0] != ring[-1]:
-ring = ring + [ring[0]]
+    if ring and ring[0] != ring[-1]:
+        ring = ring + [ring[0]]
 
 return ring
 
