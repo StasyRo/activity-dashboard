@@ -119,7 +119,7 @@ st.markdown(
 
 st.markdown('<div class="main-title">📊 Activity Dashboard</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="main-subtitle">Overview of participants by donor, location and activity</div>',
+    '<div class="main-subtitle">Overview of clients by donor, location and activity</div>',
     unsafe_allow_html=True
 )
 
@@ -227,8 +227,8 @@ def make_bar(dataframe, group_column, title):
     summary = (
         dataframe.groupby(group_column, dropna=False)
         .size()
-        .reset_index(name="Participants")
-        .sort_values("Participants", ascending=False)
+        .reset_index(name="Clients")
+        .sort_values("Clients", ascending=False)
     )
 
     summary[group_column] = summary[group_column].astype(str)
@@ -236,8 +236,8 @@ def make_bar(dataframe, group_column, title):
     fig = px.bar(
         summary,
         x=group_column,
-        y="Participants",
-        text="Participants",
+        y="Clients",
+        text="Clients",
         title=title,
         color_discrete_sequence=[CHART_COLOR]
     )
@@ -255,7 +255,7 @@ def make_bar(dataframe, group_column, title):
         ),
         font=dict(color="black"),
         xaxis_title="",
-        yaxis_title="Participants",
+        yaxis_title="Clients",
         margin=dict(l=20, r=20, t=60, b=20)
     )
 
@@ -274,8 +274,8 @@ def make_horizontal_bar(dataframe, group_column, title, top_n=20):
     summary = (
         dataframe.groupby(group_column, dropna=False)
         .size()
-        .reset_index(name="Participants")
-        .sort_values("Participants", ascending=False)
+        .reset_index(name="Clients")
+        .sort_values("Clients", ascending=False)
         .head(top_n)
     )
 
@@ -283,9 +283,9 @@ def make_horizontal_bar(dataframe, group_column, title, top_n=20):
 
     fig = px.bar(
         summary,
-        x="Participants",
+        x="Clients",
         y=group_column,
-        text="Participants",
+        text="Clients",
         title=title,
         orientation="h",
         color_discrete_sequence=[CHART_COLOR]
@@ -303,7 +303,7 @@ def make_horizontal_bar(dataframe, group_column, title, top_n=20):
             font=dict(size=20, color="black")
         ),
         font=dict(color="black"),
-        xaxis_title="Participants",
+        xaxis_title="Clients",
         yaxis_title="",
         margin=dict(l=20, r=20, t=60, b=20)
     )
@@ -324,8 +324,8 @@ def make_pie(dataframe, group_column, title):
     summary = (
         dataframe.groupby(group_column, dropna=False)
         .size()
-        .reset_index(name="Participants")
-        .sort_values("Participants", ascending=False)
+        .reset_index(name="Clients")
+        .sort_values("Clients", ascending=False)
     )
 
     summary[group_column] = summary[group_column].astype(str)
@@ -333,7 +333,7 @@ def make_pie(dataframe, group_column, title):
     fig = px.pie(
         summary,
         names=group_column,
-        values="Participants",
+        values="Clients",
         title=title,
         color_discrete_sequence=PIE_COLORS
     )
@@ -523,7 +523,7 @@ st.subheader("Key figures")
 row1_col1, row1_col2, row1_col3 = st.columns(3)
 
 with row1_col1:
-    render_card("👥", "Total participants", total_count)
+    render_card("👥", "Total Clients", total_count)
 
 with row1_col2:
     render_card("👩", "Women", female_count)
@@ -602,20 +602,20 @@ with tab_map:
 
 
 with tab_overview:
-    make_bar(filtered_df, "Donor number", "Participants by donor")
-    make_horizontal_bar(filtered_df, "Activity", "Top activities by participants", top_n=20)
+    make_bar(filtered_df, "Donor number", "Clients by donor")
+    make_bar(filtered_df, "Activity", "Top activities by clients", top_n=20)
 
 
 with tab_location:
-    make_bar(filtered_df, "Oblast", "Participants by oblast")
-    make_horizontal_bar(filtered_df, "Rayon", "Participants by rayon", top_n=25)
+    make_bar(filtered_df, "Oblast", "Clients by oblast")
+    make_bar(filtered_df, "Rayon", "Clients by rayon", top_n=25)
 
 
 with tab_profile:
-    make_pie(filtered_df, "Gender", "Gender breakdown")
-    make_pie(filtered_df, "Displacement", "Displacement status")
-    make_pie(filtered_df, "Disability", "Disability status")
-    make_bar(filtered_df, "ActDis", "Participants by age/disability category")
+    make_bar(filtered_df, "Gender", "Gender breakdown")
+    make_bar(filtered_df, "Displacement", "Displacement status")
+    make_bar(filtered_df, "Disability", "Disability status")
+    make_bar(filtered_df, "ActDis", "Clients by age/disability category")
 
 
 with tab_data:
