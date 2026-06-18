@@ -284,46 +284,68 @@ def build_map_data(dataframe, geojson):
 def show_map(dataframe, geojson):
     map_df = build_map_data(dataframe, geojson)
 
-    max_clients = max(1, int(map_df["Clients"].max()))
+    active_df = map_df[map_df["Clients"] > 0].copy()
 
-    fig = px.choropleth(
-        map_df,
-        geojson=geojson,
-        locations="rayon_key",
-        featureidkey="properties.rayon_key",
-        color="Clients",
-        hover_name="Rayon",
-        hover_data={"Clients": True, "rayon_key": False},
-        color_continuous_scale=[
-            [0.0, "#fff7ed"],
-            [0.5, "#fdba74"],
-            [1.0, "#ea580c"]
-        ],
-        range_color=(0, max_clients)
-    )
+    fig = go.Figure()
 
-    fig.update_traces(
-        marker_line_color="white",
-        marker_line_width=0.8,
-        hovertemplate="<b>%{hovertext}</b><br>Clients: %{z}<extra></extra>"
-    )
-
-    fig.update_geos(
-        fitbounds="locations",
-        visible=False,
-        showcountries=False,
-        showcoastlines=False,
-        showframe=False,
-        bgcolor="rgba(0,0,0,0)"
-    )
-
-    fig.update_layout(
-        height=700,
-        margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        coloraxis_colorbar_title="Clients"
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
+    fig.add_trace( 
+        go.Choropleth( 
+            geojson=geojson, 
+            locations=map_df["rayon_key"], 
+            z=[0] * len(map_df), 
+            featureidkey="properties.rayon_key", 
+            colorscale=[ 
+                [0, "rgba(255,255,255,0)"], 
+                [1, "rgba(255,255,255,0)"] 
+            ], 
+            marker_line_color="#9ca3af", 
+            marker_line_width=0.5, 
+            showscale=False, 
+            hoverinfo="skip" 
+        ) 
+    ) 
+    
+    if not active_df.empty: 
+        max_clients = max(1, int(active_df["Clients"].max())) 
+        
+        fig.add_trace( 
+            go.Choropleth( 
+                geojson=geojson, 
+                locations=active_df["rayon_key"], 
+                z=active_df["Clients"], 
+                featureidkey="properties.rayon_key", 
+                colorscale=[ 
+                    [0.0, "#fed7aa"], 
+                    [0.5, "#fb923c"], 
+                    [1.0, "#c2410c"] 
+                ], 
+                zmin=0, 
+                zmax=max_clients, 
+                marker_line_color="white", 
+                marker_line_width=0.8, 
+                colorbar_title="Clients", 
+                text=active_df["Rayon"], 
+                hovertemplate="<b>%{text}</b><br>Clients: %{z}<extra></extra>" 
+            ) 
+        ) 
+        
+        fig.update_geos( 
+            fitbounds="geojson", 
+            visible=False, 
+            showcountries=False, 
+            showcoastlines=False, 
+            showframe=False, 
+            bgcolor="rgba(0,0,0,0)" 
+        ) 
+        
+        fig.update_layout( 
+            height=700, 
+            margin={"r": 0, "t": 0, "l": 0, "b": 0}, 
+            paper_bgcolor="white", 
+            plot_bgcolor="white" 
+        ) 
+        
+        st.plotly_chart(fig, use_container_width=True)
 
 
 def get_options(dataframe, column):
