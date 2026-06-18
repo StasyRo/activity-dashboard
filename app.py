@@ -484,7 +484,7 @@ if filtered_df.empty:
     st.stop()
 
 
-tab_map, tab_overview, tab_location, tab_profile, tab_data = st.tabs([
+tab_map, tab_overview, tab_location, tab_profile = st.tabs([
     "Map",
     "Overview",
     "Location",
