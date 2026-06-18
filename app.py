@@ -436,7 +436,7 @@ with st.sidebar.container(border=True):
 filtered_df = df[
     df["Oblast"].isin(selected_oblasts) &
     df["Rayon"].isin(selected_rayons) &
-    df["Donor"].isin(selected_donors) &
+    df["Donor number"].isin(selected_donors) &
     df["Activity"].isin(selected_activities) &
     df["Gender"].isin(selected_gender) &
     df["Displacement"].isin(selected_displacement) &
