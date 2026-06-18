@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 DATA_FILE = Path("Data.xlsx")
-GEOJSON_FILE = Path("rayons_en.geojson")
+GEOJSON_FILE = Path("rayons_en2.geojson")
 SHEET_NAME = "TotalF"
 
 CHART_COLOR = "#F4C21A"
@@ -460,6 +460,9 @@ def make_bar(dataframe, group_column, title, value_column=None, top_n=None, y_ti
 
     summary[group_column] = summary[group_column].astype(str)
 
+    max_value = summary["Value"].max() if not summary.empty else 0
+    y_range_max = max_value * 1.18 if max_value > 0 else 1
+
     fig = px.bar(
         summary,
         x=group_column,
@@ -473,6 +476,8 @@ def make_bar(dataframe, group_column, title, value_column=None, top_n=None, y_ti
         marker_line_color=CHART_BORDER_COLOR,
         marker_line_width=0.8,
         texttemplate=text_template,
+        textposition="outside",
+        cliponaxis=False,
         textfont=dict(color="black", size=13),
         hovertemplate=hover_template
     )
@@ -485,14 +490,16 @@ def make_bar(dataframe, group_column, title, value_column=None, top_n=None, y_ti
         font=dict(color="black"),
         xaxis_title="",
         yaxis_title=y_axis_title,
-        margin=dict(l=20, r=20, t=60, b=90),
+        margin=dict(l=20, r=35, t=60, b=90),
         plot_bgcolor="white",
         paper_bgcolor="white",
         hoverlabel=dict(
             bgcolor="white",
             font_size=13,
             font_color="black"
-        )
+        ),
+        uniformtext_minsize=12,
+        uniformtext_mode="show"
     )
 
     fig.update_xaxes(
@@ -503,7 +510,8 @@ def make_bar(dataframe, group_column, title, value_column=None, top_n=None, y_ti
 
     fig.update_yaxes(
         tickfont=dict(color="black"),
-        gridcolor="#f3f4f6"
+        gridcolor="#f3f4f6",
+        range=[0, y_range_max]
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -535,6 +543,10 @@ def make_horizontal_bar(dataframe, group_column, title, value_column=None, top_n
 
     summary[group_column] = summary[group_column].astype(str)
 
+    max_value = summary["Value"].max() if not summary.empty else 0
+    x_range_max = max_value * 1.18 if max_value > 0 else 1
+    chart_height = max(430, 34 * len(summary) + 120)
+
     fig = px.bar(
         summary,
         x="Value",
@@ -549,6 +561,8 @@ def make_horizontal_bar(dataframe, group_column, title, value_column=None, top_n
         marker_line_color=CHART_BORDER_COLOR,
         marker_line_width=0.8,
         texttemplate=text_template,
+        textposition="outside",
+        cliponaxis=False,
         textfont=dict(color="black", size=13),
         hovertemplate=hover_template
     )
@@ -561,19 +575,23 @@ def make_horizontal_bar(dataframe, group_column, title, value_column=None, top_n
         font=dict(color="black"),
         xaxis_title=x_axis_title,
         yaxis_title="",
-        margin=dict(l=20, r=20, t=60, b=40),
+        height=chart_height,
+        margin=dict(l=20, r=95, t=60, b=40),
         plot_bgcolor="white",
         paper_bgcolor="white",
         hoverlabel=dict(
             bgcolor="white",
             font_size=13,
             font_color="black"
-        )
+        ),
+        uniformtext_minsize=12,
+        uniformtext_mode="show"
     )
 
     fig.update_xaxes(
         tickfont=dict(color="black"),
-        gridcolor="#f3f4f6"
+        gridcolor="#f3f4f6",
+        range=[0, x_range_max]
     )
 
     fig.update_yaxes(
@@ -627,7 +645,7 @@ def show_map(dataframe, geojson):
                 <div class="map-placeholder-icon">🗺️</div>
                 <div class="map-placeholder-title">Map file is not ready</div>
                 <div class="map-placeholder-text">
-                    Please check that rayons_en.geojson is a valid GeoJSON file.
+                    Please check that rayons_en2.geojson is a valid GeoJSON file.
                 </div>
             </div>
             """,
