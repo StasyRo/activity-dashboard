@@ -124,7 +124,7 @@ def load_data():
         st.error("Excel file Data.xlsx was not found.")
         st.stop()
 
-    data = pd.read_excel(DATA_FILE, engine="openpyxl")
+    data = pd.read_excel(DATA_FILE, sheet_name="TotalF", engine="openpyxl")
     data.columns = data.columns.str.strip()
 
     required_columns = [
