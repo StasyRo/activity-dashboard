@@ -277,8 +277,6 @@ def show_map(dataframe, geojson):
 
     st.plotly_chart(fig, use_container_width=True)
 
-
-
 def get_options(dataframe, column):
     return sorted(dataframe[column].dropna().astype(str).unique().tolist())
 
