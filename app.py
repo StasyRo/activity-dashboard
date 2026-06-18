@@ -14,60 +14,107 @@ st.set_page_config(
 )
 
 DATA_FILE = Path("Data.xlsx")
-GEOJSON_FILE = Path("rayons_en.geojson")
+GEOJSON_FILE = Path("rayons_en2.geojson")
+SHEET_NAME = "TotalF"
 
 CHART_COLOR = "#F4C21A"
+CHART_BORDER_COLOR = "#D4A514"
+
+ORANGE_SCALE = [
+    [0.0, "#fed7aa"],
+    [0.5, "#fb923c"],
+    [1.0, "#c2410c"]
+]
 
 
 st.markdown(
     """
     <style>
+    .block-container {
+        padding-top: 1.4rem;
+        padding-bottom: 2rem;
+    }
+
+    .hero-card {
+        background: linear-gradient(135deg, #fff7ed 0%, #ffffff 55%, #fef3c7 100%);
+        border: 1px solid #fed7aa;
+        border-radius: 24px;
+        padding: 28px 30px;
+        margin-bottom: 22px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
     .main-title {
-        font-size: 34px;
-        font-weight: 800;
+        font-size: 38px;
+        font-weight: 900;
         color: #111827;
-        margin-bottom: 0px;
+        margin-bottom: 4px;
+        letter-spacing: -0.03em;
     }
 
     .main-subtitle {
         font-size: 15px;
         color: #6b7280;
-        margin-bottom: 22px;
+        margin-bottom: 0px;
+    }
+
+    .section-title {
+        font-size: 22px;
+        font-weight: 850;
+        color: #111827;
+        margin-top: 8px;
+        margin-bottom: 14px;
     }
 
     .metric-card {
         background: #ffffff;
         border: 1px solid #e5e7eb;
-        border-radius: 18px;
-        padding: 22px 18px;
-        text-align: center;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-        min-height: 135px;
+        border-top: 5px solid #F4C21A;
+        border-radius: 20px;
+        padding: 20px 16px;
+        text-align: left;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+        min-height: 128px;
         margin-bottom: 14px;
     }
 
-    .metric-icon {
-        font-size: 38px;
-        margin-bottom: 8px;
+    .metric-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
     }
 
-    .metric-value {
-        font-size: 34px;
-        font-weight: 800;
-        color: #111827;
-        line-height: 1.1;
+    .metric-icon {
+        font-size: 30px;
+        line-height: 1;
     }
 
     .metric-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: #374151;
-        margin-top: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #4b5563;
+        line-height: 1.2;
+    }
+
+    .metric-value {
+        font-size: 32px;
+        font-weight: 900;
+        color: #111827;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+    }
+
+    .small-note {
+        color: #6b7280;
+        font-size: 13px;
+        margin-top: -4px;
+        margin-bottom: 14px;
     }
 
     .filter-title {
-        font-size: 22px;
-        font-weight: 800;
+        font-size: 23px;
+        font-weight: 900;
         color: #111827;
         margin-bottom: 4px;
     }
@@ -76,6 +123,16 @@ st.markdown(
         font-size: 13px;
         color: #6b7280;
         margin-bottom: 16px;
+    }
+
+    .active-filter-box {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 16px;
+        padding: 12px 14px;
+        color: #92400e;
+        margin-bottom: 16px;
+        font-size: 14px;
     }
 
     .map-placeholder {
@@ -104,6 +161,10 @@ st.markdown(
         font-size: 15px;
         color: #9a3412;
     }
+
+    div[data-testid="stSidebar"] {
+        background: #fafafa;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -111,12 +172,14 @@ st.markdown(
 
 
 st.markdown(
-    '<div class="main-title">📊 Activity Dashboard</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="main-subtitle">Overview of clients by donor, location and activity</div>',
+    """
+    <div class="hero-card">
+        <div class="main-title">📊 Activity Dashboard</div>
+        <div class="main-subtitle">
+            Overview of clients, received EUR amount, donors, locations and activities
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
@@ -127,7 +190,7 @@ def load_data():
         st.error("Excel file Data.xlsx was not found.")
         st.stop()
 
-    data = pd.read_excel(DATA_FILE, sheet_name="TotalF", engine="openpyxl")
+    data = pd.read_excel(DATA_FILE, sheet_name=SHEET_NAME, engine="openpyxl")
     data.columns = data.columns.str.strip()
 
     required_columns = [
@@ -139,7 +202,8 @@ def load_data():
         "Disability",
         "Rayon",
         "ActDis",
-        "Activity"
+        "Activity",
+        "Receive Amount EUR"
     ]
 
     missing_columns = [col for col in required_columns if col not in data.columns]
@@ -173,6 +237,19 @@ def load_data():
         )
 
     data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
+
+    data["Receive Amount EUR"] = (
+        data["Receive Amount EUR"]
+        .astype(str)
+        .str.replace("€", "", regex=False)
+        .str.replace(" ", "", regex=False)
+        .str.replace(",", ".", regex=False)
+    )
+
+    data["Receive Amount EUR"] = pd.to_numeric(
+        data["Receive Amount EUR"],
+        errors="coerce"
+    ).fillna(0)
 
     return data
 
@@ -243,29 +320,21 @@ def fix_geojson_winding(geojson):
 @st.cache_data
 def load_geojson():
     if not GEOJSON_FILE.exists():
-        st.error(f"GeoJSON file {GEOJSON_FILE} was not found.")
-        st.stop()
+        return None
 
     with open(GEOJSON_FILE, "r", encoding="utf-8-sig") as file:
         raw_text = file.read().strip()
 
     if not raw_text:
-        st.error(f"The file {GEOJSON_FILE} is empty.")
-        st.stop()
+        return None
 
     if raw_text.startswith("<"):
-        st.error(f"The file {GEOJSON_FILE} looks like an HTML page, not a GeoJSON file.")
-        st.write("You probably uploaded a GitHub page instead of the raw GeoJSON file.")
-        st.stop()
+        return None
 
     try:
         geojson_raw = json.loads(raw_text)
-    except json.JSONDecodeError as error:
-        st.error(f"The file {GEOJSON_FILE} is not valid JSON / GeoJSON.")
-        st.write(f"JSON error: line {error.lineno}, column {error.colno}")
-        st.write("First characters of the file:")
-        st.code(raw_text[:300])
-        st.stop()
+    except json.JSONDecodeError:
+        return None
 
     if isinstance(geojson_raw, dict) and "features" in geojson_raw:
         geojson = geojson_raw
@@ -280,16 +349,10 @@ def load_geojson():
             "features": [geojson_raw]
         }
     else:
-        st.error("The map file is not a valid GeoJSON FeatureCollection.")
-        st.write("Expected structure:")
-        st.code('{"type": "FeatureCollection", "features": [...]}')
-        st.write("Your file has this structure:")
-        st.write(geojson_raw.keys() if isinstance(geojson_raw, dict) else type(geojson_raw))
-        st.stop()
+        return None
 
     if not geojson.get("features"):
-        st.error("GeoJSON file has no features.")
-        st.stop()
+        return None
 
     for feature in geojson["features"]:
         props = feature.get("properties", {})
@@ -315,117 +378,32 @@ def load_geojson():
     return geojson
 
 
-def build_map_data(dataframe, geojson):
-    rayon_summary = (
-        dataframe.groupby("Rayon", dropna=False)
-        .size()
-        .reset_index(name="Clients")
-    )
-
-    rayon_summary["Rayon"] = rayon_summary["Rayon"].astype(str).str.strip()
-    rayon_summary["rayon_key"] = rayon_summary["Rayon"].str.lower()
-
-    geo_records = []
-    for feature in geojson["features"]:
-        geo_records.append({
-            "rayon_key": feature["properties"].get("rayon_key", ""),
-            "rayon_name": feature["properties"].get("rayon_name", "")
-        })
-
-    geo_df = pd.DataFrame(geo_records).drop_duplicates()
-
-    map_df = geo_df.merge(
-        rayon_summary,
-        on="rayon_key",
-        how="left"
-    )
-
-    map_df["Clients"] = map_df["Clients"].fillna(0).astype(int)
-    map_df["Rayon"] = map_df["Rayon"].fillna(map_df["rayon_name"])
-
-    return map_df
-
-
-def show_map(dataframe, geojson):
-    map_df = build_map_data(dataframe, geojson)
-
-    active_df = map_df[map_df["Clients"] > 0].copy()
-
-    fig = go.Figure()
-
-    fig.add_trace(
-        go.Choropleth(
-            geojson=geojson,
-            locations=map_df["rayon_key"],
-            z=[0] * len(map_df),
-            featureidkey="properties.rayon_key",
-            colorscale=[
-                [0, "rgba(255,255,255,0)"],
-                [1, "rgba(255,255,255,0)"]
-            ],
-            marker_line_color="#9ca3af",
-            marker_line_width=0.5,
-            showscale=False,
-            hoverinfo="skip"
-        )
-    )
-
-    if not active_df.empty:
-        max_clients = max(1, int(active_df["Clients"].max()))
-
-        fig.add_trace(
-            go.Choropleth(
-                geojson=geojson,
-                locations=active_df["rayon_key"],
-                z=active_df["Clients"],
-                featureidkey="properties.rayon_key",
-                colorscale=[
-                    [0.0, "#fed7aa"],
-                    [0.5, "#fb923c"],
-                    [1.0, "#c2410c"]
-                ],
-                zmin=1,
-                zmax=max_clients,
-                marker_line_color="white",
-                marker_line_width=0.8,
-                colorbar_title="Clients",
-                text=active_df["Rayon"],
-                hovertemplate="<b>%{text}</b><br>Clients: %{z}<extra></extra>"
-            )
-        )
-
-    fig.update_geos(
-        visible=False,
-        showcountries=False,
-        showcoastlines=False,
-        showframe=False,
-        bgcolor="rgba(0,0,0,0)",
-        projection_type="mercator",
-        lonaxis_range=[22, 41],
-        lataxis_range=[44, 53]
-    )
-
-    fig.update_layout(
-        height=700,
-        margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        paper_bgcolor="white",
-        plot_bgcolor="white"
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-
 def get_options(dataframe, column):
     return sorted(dataframe[column].dropna().astype(str).unique().tolist())
 
 
+def format_number(value):
+    return f"{value:,.0f}"
+
+
+def format_eur(value):
+    return f"€{value:,.0f}"
+
+
 def render_card(icon, title, value):
+    if isinstance(value, (int, float)):
+        display_value = format_number(value)
+    else:
+        display_value = str(value)
+
     st.markdown(
         f"""
         <div class="metric-card">
-            <div class="metric-icon">{icon}</div>
-            <div class="metric-value">{value:,}</div>
-            <div class="metric-title">{title}</div>
+            <div class="metric-top">
+                <div class="metric-icon">{icon}</div>
+                <div class="metric-title">{title}</div>
+            </div>
+            <div class="metric-value">{display_value}</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -453,13 +431,27 @@ def count_disability(dataframe):
     return dataframe[~dataframe["Disability"].isin(no_disability_values)].shape[0]
 
 
-def make_bar(dataframe, group_column, title, top_n=None):
-    summary = (
-        dataframe.groupby(group_column, dropna=False)
-        .size()
-        .reset_index(name="Clients")
-        .sort_values("Clients", ascending=False)
-    )
+def make_bar(dataframe, group_column, title, value_column=None, top_n=None, y_title=None):
+    if value_column:
+        summary = (
+            dataframe.groupby(group_column, dropna=False)[value_column]
+            .sum()
+            .reset_index(name="Value")
+            .sort_values("Value", ascending=False)
+        )
+        text_template = "€%{y:,.0f}"
+        y_axis_title = y_title or "EUR"
+        hover_template = "<b>%{x}</b><br>EUR: €%{y:,.0f}<extra></extra>"
+    else:
+        summary = (
+            dataframe.groupby(group_column, dropna=False)
+            .size()
+            .reset_index(name="Value")
+            .sort_values("Value", ascending=False)
+        )
+        text_template = "%{y:,.0f}"
+        y_axis_title = y_title or "Clients"
+        hover_template = "<b>%{x}</b><br>Clients: %{y:,.0f}<extra></extra>"
 
     if top_n is not None:
         summary = summary.head(top_n)
@@ -469,16 +461,18 @@ def make_bar(dataframe, group_column, title, top_n=None):
     fig = px.bar(
         summary,
         x=group_column,
-        y="Clients",
-        text="Clients",
+        y="Value",
+        text="Value",
         title=title,
         color_discrete_sequence=[CHART_COLOR]
     )
 
     fig.update_traces(
-        marker_line_color="#D4A514",
+        marker_line_color=CHART_BORDER_COLOR,
         marker_line_width=0.8,
-        textfont=dict(color="black", size=13)
+        texttemplate=text_template,
+        textfont=dict(color="black", size=13),
+        hovertemplate=hover_template
     )
 
     fig.update_layout(
@@ -488,17 +482,226 @@ def make_bar(dataframe, group_column, title, top_n=None):
         ),
         font=dict(color="black"),
         xaxis_title="",
-        yaxis_title="Clients",
-        margin=dict(l=20, r=20, t=60, b=80)
+        yaxis_title=y_axis_title,
+        margin=dict(l=20, r=20, t=60, b=90),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=13,
+            font_color="black"
+        )
     )
 
     fig.update_xaxes(
         tickfont=dict(color="black"),
-        tickangle=-35
+        tickangle=-35,
+        showgrid=False
     )
 
     fig.update_yaxes(
-        tickfont=dict(color="black")
+        tickfont=dict(color="black"),
+        gridcolor="#f3f4f6"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def make_horizontal_bar(dataframe, group_column, title, value_column=None, top_n=15, x_title=None):
+    if value_column:
+        summary = (
+            dataframe.groupby(group_column, dropna=False)[value_column]
+            .sum()
+            .reset_index(name="Value")
+            .sort_values("Value", ascending=False)
+            .head(top_n)
+        )
+        text_template = "€%{x:,.0f}"
+        x_axis_title = x_title or "EUR"
+        hover_template = "<b>%{y}</b><br>EUR: €%{x:,.0f}<extra></extra>"
+    else:
+        summary = (
+            dataframe.groupby(group_column, dropna=False)
+            .size()
+            .reset_index(name="Value")
+            .sort_values("Value", ascending=False)
+            .head(top_n)
+        )
+        text_template = "%{x:,.0f}"
+        x_axis_title = x_title or "Clients"
+        hover_template = "<b>%{y}</b><br>Clients: %{x:,.0f}<extra></extra>"
+
+    summary[group_column] = summary[group_column].astype(str)
+
+    fig = px.bar(
+        summary,
+        x="Value",
+        y=group_column,
+        text="Value",
+        title=title,
+        orientation="h",
+        color_discrete_sequence=[CHART_COLOR]
+    )
+
+    fig.update_traces(
+        marker_line_color=CHART_BORDER_COLOR,
+        marker_line_width=0.8,
+        texttemplate=text_template,
+        textfont=dict(color="black", size=13),
+        hovertemplate=hover_template
+    )
+
+    fig.update_layout(
+        title=dict(
+            text=title,
+            font=dict(size=20, color="black")
+        ),
+        font=dict(color="black"),
+        xaxis_title=x_axis_title,
+        yaxis_title="",
+        margin=dict(l=20, r=20, t=60, b=40),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=13,
+            font_color="black"
+        )
+    )
+
+    fig.update_xaxes(
+        tickfont=dict(color="black"),
+        gridcolor="#f3f4f6"
+    )
+
+    fig.update_yaxes(
+        tickfont=dict(color="black"),
+        categoryorder="total ascending"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def build_map_data(dataframe, geojson):
+    rayon_summary = (
+        dataframe.groupby("Rayon", dropna=False)
+        .agg(
+            Clients=("Rayon", "size"),
+            Amount_EUR=("Receive Amount EUR", "sum")
+        )
+        .reset_index()
+    )
+
+    rayon_summary["Rayon"] = rayon_summary["Rayon"].astype(str).str.strip()
+    rayon_summary["rayon_key"] = rayon_summary["Rayon"].str.lower()
+
+    geo_records = []
+    for feature in geojson["features"]:
+        geo_records.append({
+            "rayon_key": feature["properties"].get("rayon_key", ""),
+            "rayon_name": feature["properties"].get("rayon_name", "")
+        })
+
+    geo_df = pd.DataFrame(geo_records).drop_duplicates()
+
+    map_df = geo_df.merge(
+        rayon_summary,
+        on="rayon_key",
+        how="left"
+    )
+
+    map_df["Clients"] = map_df["Clients"].fillna(0).astype(int)
+    map_df["Amount_EUR"] = map_df["Amount_EUR"].fillna(0)
+    map_df["Rayon"] = map_df["Rayon"].fillna(map_df["rayon_name"])
+
+    return map_df
+
+
+def show_map(dataframe, geojson):
+    if geojson is None:
+        st.markdown(
+            """
+            <div class="map-placeholder">
+                <div class="map-placeholder-icon">🗺️</div>
+                <div class="map-placeholder-title">Map file is not ready</div>
+                <div class="map-placeholder-text">
+                    Please check that rayons_en2.geojson is a valid GeoJSON file.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        return
+
+    map_df = build_map_data(dataframe, geojson)
+    active_df = map_df[map_df["Clients"] > 0].copy()
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Choropleth(
+            geojson=geojson,
+            locations=map_df["rayon_key"],
+            z=[0] * len(map_df),
+            featureidkey="properties.rayon_key",
+            colorscale=[
+                [0, "rgba(255,255,255,0)"],
+                [1, "rgba(255,255,255,0)"]
+            ],
+            marker_line_color="#d1d5db",
+            marker_line_width=0.5,
+            showscale=False,
+            hoverinfo="skip"
+        )
+    )
+
+    if not active_df.empty:
+        max_clients = max(1, int(active_df["Clients"].max()))
+
+        fig.add_trace(
+            go.Choropleth(
+                geojson=geojson,
+                locations=active_df["rayon_key"],
+                z=active_df["Clients"],
+                featureidkey="properties.rayon_key",
+                colorscale=ORANGE_SCALE,
+                zmin=1,
+                zmax=max_clients,
+                marker_line_color="white",
+                marker_line_width=0.7,
+                colorbar_title="Clients",
+                text=active_df["Rayon"],
+                customdata=active_df[["Amount_EUR"]],
+                hovertemplate=(
+                    "<b>%{text}</b><br>"
+                    "Clients: %{z:,.0f}<br>"
+                    "EUR: €%{customdata[0]:,.0f}"
+                    "<extra></extra>"
+                )
+            )
+        )
+
+    fig.update_geos(
+        visible=False,
+        showcountries=False,
+        showcoastlines=False,
+        showframe=False,
+        bgcolor="rgba(0,0,0,0)",
+        projection_type="mercator",
+        lonaxis_range=[22, 41],
+        lataxis_range=[44, 53]
+    )
+
+    fig.update_layout(
+        height=720,
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=13,
+            font_color="black"
+        )
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -548,6 +751,18 @@ with st.sidebar.container(border=True):
 
 
 with st.sidebar.container(border=True):
+    st.markdown("### 🗺️ Quick rayon focus")
+
+    rayon_focus_options = ["All rayons"] + get_options(df, "Rayon")
+
+    selected_rayon_focus = st.selectbox(
+        "Focus rayon",
+        rayon_focus_options,
+        label_visibility="collapsed"
+    )
+
+
+with st.sidebar.container(border=True):
     st.markdown("### 📍 Location")
 
     oblasts = get_options(df, "Oblast")
@@ -591,7 +806,7 @@ with st.sidebar.container(border=True):
 
 
 with st.sidebar.container(border=True):
-    st.markdown("### 👥 Participant profile")
+    st.markdown("### 👥 Client profile")
 
     gender = get_options(df, "Gender")
     displacement = get_options(df, "Displacement")
@@ -634,6 +849,11 @@ filtered_df = df[
     df["ActDis"].isin(selected_actdis)
 ]
 
+if selected_rayon_focus != "All rayons":
+    filtered_df = filtered_df[
+        filtered_df["Rayon"] == selected_rayon_focus
+    ]
+
 if start_date is not None and end_date is not None:
     if start_date > end_date:
         st.error("Start date cannot be later than end date.")
@@ -643,6 +863,17 @@ if start_date is not None and end_date is not None:
         (filtered_df["Date"].dt.date >= start_date) &
         (filtered_df["Date"].dt.date <= end_date)
     ]
+
+
+if selected_rayon_focus != "All rayons":
+    st.markdown(
+        f"""
+        <div class="active-filter-box">
+            Active quick rayon filter: <b>{selected_rayon_focus}</b>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 total_count = len(filtered_df)
@@ -666,52 +897,56 @@ returnee_count = count_displacement_exact(
 
 pwd_count = count_disability(filtered_df)
 
+total_eur = filtered_df["Receive Amount EUR"].sum()
+average_eur = filtered_df["Receive Amount EUR"].mean() if total_count > 0 else 0
+median_eur = filtered_df["Receive Amount EUR"].median() if total_count > 0 else 0
 
-st.subheader("Key figures")
 
-row1_col1, row1_col2, row1_col3 = st.columns(3)
+st.markdown('<div class="section-title">Key figures</div>', unsafe_allow_html=True)
 
-with row1_col1:
+kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+with kpi1:
     render_card("👥", "Total Clients", total_count)
 
-with row1_col2:
+with kpi2:
+    render_card("💶", "Total received EUR", format_eur(total_eur))
+
+with kpi3:
+    render_card("📊", "Average EUR per client", format_eur(average_eur))
+
+with kpi4:
+    render_card("🎯", "Median EUR per client", format_eur(median_eur))
+
+
+kpi5, kpi6, kpi7, kpi8 = st.columns(4)
+
+with kpi5:
     render_card("👩", "Women", female_count)
 
-with row1_col3:
+with kpi6:
     render_card("👨", "Men", male_count)
 
-
-row2_col1, row2_col2, row2_col3 = st.columns(3)
-
-with row2_col1:
-    render_card("🏠", "Local people", local_count)
-
-with row2_col2:
-    render_card("🧳", "IDPs", idp_count)
-
-with row2_col3:
-    render_card("↩️", "Returnees", returnee_count)
-
-
-row3_col1, row3_col2, row3_col3 = st.columns(3)
-
-with row3_col1:
-    st.empty()
-
-with row3_col2:
-    render_card("♿", "People with disabilities", pwd_count)
-
-with row3_col3:
-    st.empty()
-
-
-row4_col1, row4_col2 = st.columns(2)
-
-with row4_col1:
+with kpi7:
     render_card("💰", "Donors", filtered_df["Donor number"].nunique())
 
-with row4_col2:
+with kpi8:
     render_card("📋", "Activities", filtered_df["Activity"].nunique())
+
+
+kpi9, kpi10, kpi11, kpi12 = st.columns(4)
+
+with kpi9:
+    render_card("🏠", "Local people", local_count)
+
+with kpi10:
+    render_card("🧳", "IDPs", idp_count)
+
+with kpi11:
+    render_card("↩️", "Returnees", returnee_count)
+
+with kpi12:
+    render_card("♿", "People with disabilities", pwd_count)
 
 
 st.divider()
@@ -721,33 +956,96 @@ if filtered_df.empty:
     st.stop()
 
 
-tab_map, tab_overview, tab_location, tab_profile = st.tabs([
+tab_map, tab_overview, tab_money, tab_location, tab_profile = st.tabs([
     "Map",
     "Overview",
+    "EUR analysis",
     "Location",
-    "Profile",
+    "Profile"
 ])
 
 
 with tab_map:
-    st.subheader("Map of Ukraine by rayon")
-    st.caption("Rayons with more clients are shown in darker orange.")
+    st.markdown('<div class="section-title">Map of Ukraine by rayon</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="small-note">Rayons with more clients are shown in darker orange. Use “Quick rayon focus” in the sidebar to filter the whole dashboard by rayon.</div>',
+        unsafe_allow_html=True
+    )
 
     show_map(filtered_df, geojson)
 
 
 with tab_overview:
-    make_bar(filtered_df, "Donor number", "Clients by donor")
-    make_bar(filtered_df, "Activity", "Top activities by clients", top_n=20)
+    left_col, right_col = st.columns(2)
+
+    with left_col:
+        make_bar(filtered_df, "Donor number", "Clients by donor")
+
+    with right_col:
+        make_horizontal_bar(filtered_df, "Activity", "Top activities by clients", top_n=15)
+
+
+with tab_money:
+    left_col, right_col = st.columns(2)
+
+    with left_col:
+        make_bar(
+            filtered_df,
+            "Donor number",
+            "Received EUR by donor",
+            value_column="Receive Amount EUR",
+            y_title="EUR"
+        )
+
+    with right_col:
+        make_horizontal_bar(
+            filtered_df,
+            "Activity",
+            "Received EUR by activity",
+            value_column="Receive Amount EUR",
+            top_n=15,
+            x_title="EUR"
+        )
+
+    left_col2, right_col2 = st.columns(2)
+
+    with left_col2:
+        make_bar(
+            filtered_df,
+            "Oblast",
+            "Received EUR by oblast",
+            value_column="Receive Amount EUR",
+            y_title="EUR"
+        )
+
+    with right_col2:
+        make_horizontal_bar(
+            filtered_df,
+            "Rayon",
+            "Received EUR by rayon",
+            value_column="Receive Amount EUR",
+            top_n=15,
+            x_title="EUR"
+        )
 
 
 with tab_location:
-    make_bar(filtered_df, "Oblast", "Clients by oblast")
-    make_bar(filtered_df, "Rayon", "Clients by rayon", top_n=25)
+    left_col, right_col = st.columns(2)
+
+    with left_col:
+        make_bar(filtered_df, "Oblast", "Clients by oblast")
+
+    with right_col:
+        make_horizontal_bar(filtered_df, "Rayon", "Clients by rayon", top_n=15)
 
 
 with tab_profile:
-    make_bar(filtered_df, "Gender", "Gender breakdown")
-    make_bar(filtered_df, "Displacement", "Displacement status")
-    make_bar(filtered_df, "Disability", "Disability status")
-    make_bar(filtered_df, "ActDis", "Clients by age/disability category")
+    left_col, right_col = st.columns(2)
+
+    with left_col:
+        make_bar(filtered_df, "Gender", "Gender breakdown")
+        make_bar(filtered_df, "Displacement", "Displacement status")
+
+    with right_col:
+        make_bar(filtered_df, "Disability", "Disability status")
+        make_bar(filtered_df, "ActDis", "Clients by age/disability category")
