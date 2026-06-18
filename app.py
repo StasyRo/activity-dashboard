@@ -165,6 +165,8 @@ data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
 return data
 
 
+
+
 def normalize_text(value):
 value = str(value).lower().strip()
 value = value.replace("-", "*")
