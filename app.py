@@ -176,6 +176,64 @@ def load_data():
 
     return data
 
+def ring_area(ring):
+area = 0.0
+
+for i in range(len(ring) - 1):
+    x1, y1 = ring[i][0], ring[i][1]
+    x2, y2 = ring[i + 1][0], ring[i + 1][1]
+    area += (x1 * y2) - (x2 * y1)
+
+return area / 2
+
+def ensure_closed_ring(ring):
+if ring and ring[0] != ring[-1]:
+ring = ring + [ring[0]]
+
+return ring
+
+def fix_polygon_rings(rings):
+if not rings:
+return rings
+
+fixed_rings = []
+
+exterior_ring = ensure_closed_ring(rings[0])
+
+if ring_area(exterior_ring) < 0:
+    exterior_ring = list(reversed(exterior_ring))
+
+fixed_rings.append(exterior_ring)
+
+for hole in rings[1:]:
+    hole = ensure_closed_ring(hole)
+
+    if ring_area(hole) > 0:
+        hole = list(reversed(hole))
+
+    fixed_rings.append(hole)
+
+return fixed_rings
+
+def fix_geojson_winding(geojson):
+for feature in geojson["features"]:
+geometry = feature.get("geometry")
+
+    if not geometry:
+        continue
+
+    if geometry["type"] == "Polygon":
+        geometry["coordinates"] = fix_polygon_rings(
+            geometry["coordinates"]
+        )
+
+    elif geometry["type"] == "MultiPolygon":
+        geometry["coordinates"] = [
+            fix_polygon_rings(polygon)
+            for polygon in geometry["coordinates"]
+        ]
+
+return geojson
 
 @st.cache_data
 def load_geojson():
