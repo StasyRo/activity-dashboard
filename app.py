@@ -102,10 +102,15 @@ margin-bottom: 0px;
 </style>
 """,
 unsafe_allow_html=True
+```
 
 )
 
-st.markdown('<div class="main-title">📊 Activity Dashboard</div>', unsafe_allow_html=True)
+st.markdown(
+'<div class="main-title">📊 Activity Dashboard</div>',
+unsafe_allow_html=True
+)
+
 st.markdown(
 '<div class="main-subtitle">Overview of clients by donor, location and activity</div>',
 unsafe_allow_html=True
@@ -256,9 +261,11 @@ st.plotly_chart(fig, use_container_width=True)
 
 df = load_data()
 
-# Sidebar filters
+st.sidebar.markdown(
+'<div class="filter-title">Filters</div>',
+unsafe_allow_html=True
+)
 
-st.sidebar.markdown('<div class="filter-title">Filters</div>', unsafe_allow_html=True)
 st.sidebar.markdown(
 '<div class="filter-subtitle">Use filters to update all figures and charts.</div>',
 unsafe_allow_html=True
@@ -326,7 +333,7 @@ selected_donors = st.multiselect(
     label_visibility="collapsed"
 )
 
-st.markdown("### 📋 Activity")
+st.markdown("### 🤝 Activity")
 
 activities = get_options(df, "Activity")
 
@@ -395,8 +402,6 @@ filtered_df = filtered_df[
 ]
 ```
 
-# Key figures
-
 total_count = len(filtered_df)
 female_count = count_gender(filtered_df, "female")
 male_count = count_gender(filtered_df, "male")
@@ -459,7 +464,7 @@ with row4_col1:
 render_card("💰", "Donors", filtered_df["Donor number"].nunique())
 
 with row4_col2:
-render_card("📋", "Activities", filtered_df["Activity"].nunique())
+render_card("🤝", "Activities", filtered_df["Activity"].nunique())
 
 st.divider()
 
