@@ -204,7 +204,7 @@ def count_disability(dataframe):
 ""
 ]
 
-return dataframe[~dataframe["Disability"].isin(no_disability_values)].shape[0]
+    return dataframe[~dataframe["Disability"].isin(no_disability_values)].shape[0]
 
 
 
