@@ -4,402 +4,408 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+
 st.set_page_config(
-page_title="Activity Dashboard",
-page_icon="📊",
-layout="wide"
+    page_title="Activity Dashboard",
+    page_icon="📊",
+    layout="wide"
 )
 
 DATA_FILE = Path("Data.xlsx")
 
 CHART_COLOR = "#F4C21A"
 
+
 st.markdown(
-""" <style>
-.main-title {
-font-size: 34px;
-font-weight: 800;
-color: #111827;
-margin-bottom: 0px;
-}
+    """
+    <style>
+    .main-title {
+        font-size: 34px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 0px;
+    }
 
-.main-subtitle {
-    font-size: 15px;
-    color: #6b7280;
-    margin-bottom: 22px;
-}
+    .main-subtitle {
+        font-size: 15px;
+        color: #6b7280;
+        margin-bottom: 22px;
+    }
 
-.metric-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 18px;
-    padding: 22px 18px;
-    text-align: center;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-    min-height: 135px;
-    margin-bottom: 14px;
-}
+    .metric-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 22px 18px;
+        text-align: center;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        min-height: 135px;
+        margin-bottom: 14px;
+    }
 
-.metric-icon {
-    font-size: 38px;
-    margin-bottom: 8px;
-}
+    .metric-icon {
+        font-size: 38px;
+        margin-bottom: 8px;
+    }
 
-.metric-value {
-    font-size: 34px;
-    font-weight: 800;
-    color: #111827;
-    line-height: 1.1;
-}
+    .metric-value {
+        font-size: 34px;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.1;
+    }
 
-.metric-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #374151;
-    margin-top: 8px;
-}
+    .metric-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #374151;
+        margin-top: 8px;
+    }
 
-.filter-title {
-    font-size: 22px;
-    font-weight: 800;
-    color: #111827;
-    margin-bottom: 4px;
-}
+    .filter-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 4px;
+    }
 
-.filter-subtitle {
-    font-size: 13px;
-    color: #6b7280;
-    margin-bottom: 16px;
-}
+    .filter-subtitle {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 16px;
+    }
 
-.map-placeholder {
-    background: #fff7ed;
-    border: 1px dashed #fb923c;
-    border-radius: 18px;
-    padding: 60px 24px;
-    text-align: center;
-    color: #9a3412;
-    margin-top: 10px;
-    margin-bottom: 20px;
-}
+    .map-placeholder {
+        background: #fff7ed;
+        border: 1px dashed #fb923c;
+        border-radius: 18px;
+        padding: 60px 24px;
+        text-align: center;
+        color: #9a3412;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
 
-.map-placeholder-icon {
-    font-size: 52px;
-    margin-bottom: 10px;
-}
+    .map-placeholder-icon {
+        font-size: 52px;
+        margin-bottom: 10px;
+    }
 
-.map-placeholder-title {
-    font-size: 24px;
-    font-weight: 800;
-    margin-bottom: 6px;
-}
+    .map-placeholder-title {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
 
-.map-placeholder-text {
-    font-size: 15px;
-    color: #9a3412;
-}
-</style>
-""",
-unsafe_allow_html=True
+    .map-placeholder-text {
+        font-size: 15px;
+        color: #9a3412;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
+
+st.markdown(
+    '<div class="main-title">📊 Activity Dashboard</div>',
+    unsafe_allow_html=True
 )
 
 st.markdown(
-'<div class="main-title">📊 Activity Dashboard</div>',
-unsafe_allow_html=True
+    '<div class="main-subtitle">Overview of clients by donor, location and activity</div>',
+    unsafe_allow_html=True
 )
 
-st.markdown(
-'<div class="main-subtitle">Overview of clients by donor, location and activity</div>',
-unsafe_allow_html=True
-)
 
 @st.cache_data
 def load_data():
-if not DATA_FILE.exists():
-st.error("Excel file Data.xlsx was not found.")
-st.stop()
+    if not DATA_FILE.exists():
+        st.error("Excel file Data.xlsx was not found.")
+        st.stop()
 
+    data = pd.read_excel(DATA_FILE, engine="openpyxl")
+    data.columns = data.columns.str.strip()
 
-data = pd.read_excel(DATA_FILE, engine="openpyxl")
-data.columns = data.columns.str.strip()
+    required_columns = [
+        "Date",
+        "Oblast",
+        "Donor number",
+        "Gender",
+        "Displacement",
+        "Disability",
+        "Rayon",
+        "ActDis",
+        "Activity"
+    ]
 
-required_columns = [
-    "Date",
-    "Oblast",
-    "Donor number",
-    "Gender",
-    "Displacement",
-    "Disability",
-    "Rayon",
-    "ActDis",
-    "Activity"
-]
+    missing_columns = [col for col in required_columns if col not in data.columns]
 
-missing_columns = [col for col in required_columns if col not in data.columns]
+    if missing_columns:
+        st.error("Missing required columns:")
+        st.write(missing_columns)
 
-if missing_columns:
-    st.error("Missing required columns:")
-    st.write(missing_columns)
+        st.subheader("Columns found in your Excel:")
+        st.write(list(data.columns))
+        st.stop()
 
-    st.subheader("Columns found in your Excel:")
-    st.write(list(data.columns))
-    st.stop()
+    text_columns = [
+        "Oblast",
+        "Donor number",
+        "Gender",
+        "Displacement",
+        "Disability",
+        "Rayon",
+        "ActDis",
+        "Activity"
+    ]
 
-text_columns = [
-    "Oblast",
-    "Donor number",
-    "Gender",
-    "Displacement",
-    "Disability",
-    "Rayon",
-    "ActDis",
-    "Activity"
-]
+    for col in text_columns:
+        data[col] = data[col].fillna("Not specified").astype(str).str.strip()
 
-for col in text_columns:
-    data[col] = data[col].fillna("Not specified").astype(str).str.strip()
+    data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
 
-data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
-
-return data
-
-
+    return data
 
 
 def normalize_text(value):
-value = str(value).lower().strip()
-value = value.replace("-", "*")
-value = value.replace(" ", "*")
-return value
+    value = str(value).lower().strip()
+    value = value.replace("-", "_")
+    value = value.replace(" ", "_")
+    return value
+
 
 def get_options(dataframe, column):
-return sorted(dataframe[column].dropna().astype(str).unique().tolist())
+    return sorted(dataframe[column].dropna().astype(str).unique().tolist())
+
 
 def render_card(icon, title, value):
-st.markdown(
-f""" <div class="metric-card"> <div class="metric-icon">{icon}</div> <div class="metric-value">{value:,}</div> <div class="metric-title">{title}</div> </div>
-""",
-unsafe_allow_html=True
-)
+    st.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-icon">{icon}</div>
+            <div class="metric-value">{value:,}</div>
+            <div class="metric-title">{title}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 def count_gender(dataframe, gender_value):
-gender_clean = dataframe["Gender"].apply(normalize_text)
-return dataframe[gender_clean == normalize_text(gender_value)].shape[0]
+    gender_clean = dataframe["Gender"].apply(normalize_text)
+    return dataframe[gender_clean == normalize_text(gender_value)].shape[0]
+
 
 def count_displacement_exact(dataframe, values):
-displacement_clean = dataframe["Displacement"].apply(normalize_text)
-clean_values = [normalize_text(value) for value in values]
-return dataframe[displacement_clean.isin(clean_values)].shape[0]
+    displacement_clean = dataframe["Displacement"].apply(normalize_text)
+    clean_values = [normalize_text(value) for value in values]
+    return dataframe[displacement_clean.isin(clean_values)].shape[0]
+
 
 def count_disability(dataframe):
-disability_clean = dataframe["Disability"].apply(normalize_text)
+    disability_clean = dataframe["Disability"].apply(normalize_text)
 
+    no_disability_values = [
+        "no",
+        "none",
+        "not_specified",
+        "",
+        "nan"
+    ]
 
-no_disability_values = [
-    "no",
-    "none",
-    "not_specified",
-    "",
-    "nan"
-]
-
-return dataframe[~disability_clean.isin(no_disability_values)].shape[0]
+    return dataframe[~disability_clean.isin(no_disability_values)].shape[0]
 
 
 def make_bar(dataframe, group_column, title, top_n=None):
-summary = (
-dataframe.groupby(group_column, dropna=False)
-.size()
-.reset_index(name="Clients")
-.sort_values("Clients", ascending=False)
-)
+    summary = (
+        dataframe.groupby(group_column, dropna=False)
+        .size()
+        .reset_index(name="Clients")
+        .sort_values("Clients", ascending=False)
+    )
 
+    if top_n is not None:
+        summary = summary.head(top_n)
 
-if top_n is not None:
-    summary = summary.head(top_n)
+    summary[group_column] = summary[group_column].astype(str)
 
-summary[group_column] = summary[group_column].astype(str)
+    fig = px.bar(
+        summary,
+        x=group_column,
+        y="Clients",
+        text="Clients",
+        title=title,
+        color_discrete_sequence=[CHART_COLOR]
+    )
 
-fig = px.bar(
-    summary,
-    x=group_column,
-    y="Clients",
-    text="Clients",
-    title=title,
-    color_discrete_sequence=[CHART_COLOR]
-)
+    fig.update_traces(
+        marker_line_color="#D4A514",
+        marker_line_width=0.8,
+        textfont=dict(color="black", size=13)
+    )
 
-fig.update_traces(
-    marker_line_color="#D4A514",
-    marker_line_width=0.8,
-    textfont=dict(color="black", size=13)
-)
+    fig.update_layout(
+        title=dict(
+            text=title,
+            font=dict(size=20, color="black")
+        ),
+        font=dict(color="black"),
+        xaxis_title="",
+        yaxis_title="Clients",
+        margin=dict(l=20, r=20, t=60, b=80)
+    )
 
-fig.update_layout(
-    title=dict(
-        text=title,
-        font=dict(size=20, color="black")
-    ),
-    font=dict(color="black"),
-    xaxis_title="",
-    yaxis_title="Clients",
-    margin=dict(l=20, r=20, t=60, b=80)
-)
+    fig.update_xaxes(
+        tickfont=dict(color="black"),
+        tickangle=-35
+    )
 
-fig.update_xaxes(
-    tickfont=dict(color="black"),
-    tickangle=-35
-)
+    fig.update_yaxes(
+        tickfont=dict(color="black")
+    )
 
-fig.update_yaxes(
-    tickfont=dict(color="black")
-)
-
-st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
 
 
 df = load_data()
 
+
 st.sidebar.markdown(
-'<div class="filter-title">Filters</div>',
-unsafe_allow_html=True
+    '<div class="filter-title">Filters</div>',
+    unsafe_allow_html=True
 )
 
 st.sidebar.markdown(
-'<div class="filter-subtitle">Use filters to update all figures and charts.</div>',
-unsafe_allow_html=True
+    '<div class="filter-subtitle">Use filters to update all figures and charts.</div>',
+    unsafe_allow_html=True
 )
 
 valid_dates = df["Date"].dropna()
 
+
 with st.sidebar.container(border=True):
-st.markdown("### 📅 Date period")
+    st.markdown("### 📅 Date period")
+
+    if not valid_dates.empty:
+        min_date = valid_dates.min().date()
+        max_date = valid_dates.max().date()
+
+        start_date = st.date_input(
+            "Start date",
+            value=min_date,
+            min_value=min_date,
+            max_value=max_date
+        )
+
+        end_date = st.date_input(
+            "End date",
+            value=max_date,
+            min_value=min_date,
+            max_value=max_date
+        )
+    else:
+        start_date = None
+        end_date = None
+        st.info("No valid dates found.")
 
 
-if not valid_dates.empty:
-    min_date = valid_dates.min().date()
-    max_date = valid_dates.max().date()
+with st.sidebar.container(border=True):
+    st.markdown("### 📍 Location")
 
-    start_date = st.date_input(
-        "Start date",
-        value=min_date,
-        min_value=min_date,
-        max_value=max_date
+    oblasts = get_options(df, "Oblast")
+    rayons = get_options(df, "Rayon")
+
+    selected_oblasts = st.multiselect(
+        "Oblast",
+        oblasts,
+        default=oblasts
     )
 
-    end_date = st.date_input(
-        "End date",
-        value=max_date,
-        min_value=min_date,
-        max_value=max_date
+    selected_rayons = st.multiselect(
+        "Rayon",
+        rayons,
+        default=rayons
     )
-else:
-    start_date = None
-    end_date = None
-    st.info("No valid dates found.")
 
 
 with st.sidebar.container(border=True):
-st.markdown("### 📍 Location")
+    st.markdown("### 💰 Donor")
 
+    donors = get_options(df, "Donor number")
 
-oblasts = get_options(df, "Oblast")
-rayons = get_options(df, "Rayon")
+    selected_donors = st.multiselect(
+        "Donor number",
+        donors,
+        default=donors,
+        label_visibility="collapsed"
+    )
 
-selected_oblasts = st.multiselect(
-    "Oblast",
-    oblasts,
-    default=oblasts
-)
+    st.markdown("### 🤝 Activity")
 
-selected_rayons = st.multiselect(
-    "Rayon",
-    rayons,
-    default=rayons
-)
+    activities = get_options(df, "Activity")
 
-
-with st.sidebar.container(border=True):
-st.markdown("### 💰 Donor")
-
-
-donors = get_options(df, "Donor number")
-
-selected_donors = st.multiselect(
-    "Donor number",
-    donors,
-    default=donors,
-    label_visibility="collapsed"
-)
-
-st.markdown("### 🤝 Activity")
-
-activities = get_options(df, "Activity")
-
-selected_activities = st.multiselect(
-    "Activity",
-    activities,
-    default=activities,
-    label_visibility="collapsed"
-)
+    selected_activities = st.multiselect(
+        "Activity",
+        activities,
+        default=activities,
+        label_visibility="collapsed"
+    )
 
 
 with st.sidebar.container(border=True):
-st.markdown("### 👥 Participant profile")
+    st.markdown("### 👥 Participant profile")
 
+    gender = get_options(df, "Gender")
+    displacement = get_options(df, "Displacement")
+    disability = get_options(df, "Disability")
+    actdis = get_options(df, "ActDis")
 
-gender = get_options(df, "Gender")
-displacement = get_options(df, "Displacement")
-disability = get_options(df, "Disability")
-actdis = get_options(df, "ActDis")
+    selected_gender = st.multiselect(
+        "Gender",
+        gender,
+        default=gender
+    )
 
-selected_gender = st.multiselect(
-    "Gender",
-    gender,
-    default=gender
-)
+    selected_displacement = st.multiselect(
+        "Displacement",
+        displacement,
+        default=displacement
+    )
 
-selected_displacement = st.multiselect(
-    "Displacement",
-    displacement,
-    default=displacement
-)
+    selected_disability = st.multiselect(
+        "Disability",
+        disability,
+        default=disability
+    )
 
-selected_disability = st.multiselect(
-    "Disability",
-    disability,
-    default=disability
-)
-
-selected_actdis = st.multiselect(
-    "ActDis",
-    actdis,
-    default=actdis
-)
+    selected_actdis = st.multiselect(
+        "ActDis",
+        actdis,
+        default=actdis
+    )
 
 
 filtered_df = df[
-df["Oblast"].isin(selected_oblasts) &
-df["Rayon"].isin(selected_rayons) &
-df["Donor number"].isin(selected_donors) &
-df["Activity"].isin(selected_activities) &
-df["Gender"].isin(selected_gender) &
-df["Displacement"].isin(selected_displacement) &
-df["Disability"].isin(selected_disability) &
-df["ActDis"].isin(selected_actdis)
+    df["Oblast"].isin(selected_oblasts) &
+    df["Rayon"].isin(selected_rayons) &
+    df["Donor number"].isin(selected_donors) &
+    df["Activity"].isin(selected_activities) &
+    df["Gender"].isin(selected_gender) &
+    df["Displacement"].isin(selected_displacement) &
+    df["Disability"].isin(selected_disability) &
+    df["ActDis"].isin(selected_actdis)
 ]
 
 if start_date is not None and end_date is not None:
-if start_date > end_date:
-st.error("Start date cannot be later than end date.")
-st.stop()
+    if start_date > end_date:
+        st.error("Start date cannot be later than end date.")
+        st.stop()
 
-
-filtered_df = filtered_df[
-    (filtered_df["Date"].dt.date >= start_date) &
-    (filtered_df["Date"].dt.date <= end_date)
-]
+    filtered_df = filtered_df[
+        (filtered_df["Date"].dt.date >= start_date) &
+        (filtered_df["Date"].dt.date <= end_date)
+    ]
 
 
 total_count = len(filtered_df)
@@ -407,124 +413,131 @@ female_count = count_gender(filtered_df, "female")
 male_count = count_gender(filtered_df, "male")
 
 local_count = count_displacement_exact(
-filtered_df,
-["local_population"]
+    filtered_df,
+    ["local_population"]
 )
 
 idp_count = count_displacement_exact(
-filtered_df,
-["displaced_person"]
+    filtered_df,
+    ["displaced_person"]
 )
 
 returnee_count = count_displacement_exact(
-filtered_df,
-["returnee"]
+    filtered_df,
+    ["returnee"]
 )
 
 pwd_count = count_disability(filtered_df)
+
 
 st.subheader("Key figures")
 
 row1_col1, row1_col2, row1_col3 = st.columns(3)
 
 with row1_col1:
-render_card("👥", "Total Clients", total_count)
+    render_card("👥", "Total Clients", total_count)
 
 with row1_col2:
-render_card("👩", "Women", female_count)
+    render_card("👩", "Women", female_count)
 
 with row1_col3:
-render_card("👨", "Men", male_count)
+    render_card("👨", "Men", male_count)
+
 
 row2_col1, row2_col2, row2_col3 = st.columns(3)
 
 with row2_col1:
-render_card("🏠", "Local people", local_count)
+    render_card("🏠", "Local people", local_count)
 
 with row2_col2:
-render_card("🧳", "IDPs", idp_count)
+    render_card("🧳", "IDPs", idp_count)
 
 with row2_col3:
-render_card("↩️", "Returnees", returnee_count)
+    render_card("↩️", "Returnees", returnee_count)
+
 
 row3_col1, row3_col2, row3_col3 = st.columns(3)
 
 with row3_col1:
-st.empty()
+    st.empty()
 
 with row3_col2:
-render_card("♿", "People with disabilities", pwd_count)
+    render_card("♿", "People with disabilities", pwd_count)
 
 with row3_col3:
-st.empty()
+    st.empty()
+
 
 row4_col1, row4_col2 = st.columns(2)
 
 with row4_col1:
-render_card("💰", "Donors", filtered_df["Donor number"].nunique())
+    render_card("💰", "Donors", filtered_df["Donor number"].nunique())
 
 with row4_col2:
-render_card("🤝", "Activities", filtered_df["Activity"].nunique())
+    render_card("🤝", "Activities", filtered_df["Activity"].nunique())
+
 
 st.divider()
 
 if filtered_df.empty:
-st.warning("No data for selected filters.")
-st.stop()
+    st.warning("No data for selected filters.")
+    st.stop()
+
 
 tab_map, tab_overview, tab_location, tab_profile, tab_data = st.tabs([
-"Map",
-"Overview",
-"Location",
-"Profile",
-"Detailed data"
+    "Map",
+    "Overview",
+    "Location",
+    "Profile",
+    "Detailed data"
 ])
 
+
 with tab_map:
-st.subheader("Map")
+    st.subheader("Map")
 
-
-st.markdown(
-    """
-    <div class="map-placeholder">
-        <div class="map-placeholder-icon">🗺️</div>
-        <div class="map-placeholder-title">Map will be added here</div>
-        <div class="map-placeholder-text">
-            This tab is reserved for the interactive Ukraine rayon map.
+    st.markdown(
+        """
+        <div class="map-placeholder">
+            <div class="map-placeholder-icon">🗺️</div>
+            <div class="map-placeholder-title">Map will be added here</div>
+            <div class="map-placeholder-text">
+                This tab is reserved for the interactive Ukraine rayon map.
+            </div>
         </div>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+        """,
+        unsafe_allow_html=True
+    )
 
-st.info("Next step: connect a valid GeoJSON file and make the map interactive.")
+    st.info("Next step: connect a valid GeoJSON file and make the map interactive.")
 
 
 with tab_overview:
-make_bar(filtered_df, "Donor number", "Clients by donor")
-make_bar(filtered_df, "Activity", "Top activities by clients", top_n=20)
+    make_bar(filtered_df, "Donor number", "Clients by donor")
+    make_bar(filtered_df, "Activity", "Top activities by clients", top_n=20)
+
 
 with tab_location:
-make_bar(filtered_df, "Oblast", "Clients by oblast")
-make_bar(filtered_df, "Rayon", "Clients by rayon", top_n=25)
+    make_bar(filtered_df, "Oblast", "Clients by oblast")
+    make_bar(filtered_df, "Rayon", "Clients by rayon", top_n=25)
+
 
 with tab_profile:
-make_bar(filtered_df, "Gender", "Gender breakdown")
-make_bar(filtered_df, "Displacement", "Displacement status")
-make_bar(filtered_df, "Disability", "Disability status")
-make_bar(filtered_df, "ActDis", "Clients by age/disability category")
+    make_bar(filtered_df, "Gender", "Gender breakdown")
+    make_bar(filtered_df, "Displacement", "Displacement status")
+    make_bar(filtered_df, "Disability", "Disability status")
+    make_bar(filtered_df, "ActDis", "Clients by age/disability category")
+
 
 with tab_data:
-st.subheader("Detailed data")
-st.dataframe(filtered_df, use_container_width=True)
+    st.subheader("Detailed data")
+    st.dataframe(filtered_df, use_container_width=True)
 
+    csv = filtered_df.to_csv(index=False).encode("utf-8-sig")
 
-csv = filtered_df.to_csv(index=False).encode("utf-8-sig")
-
-st.download_button(
-    label="Download filtered data as CSV",
-    data=csv,
-    file_name="filtered_activity_data.csv",
-    mime="text/csv"
-)
-
+    st.download_button(
+        label="Download filtered data as CSV",
+        data=csv,
+        file_name="filtered_activity_data.csv",
+        mime="text/csv"
+    )
