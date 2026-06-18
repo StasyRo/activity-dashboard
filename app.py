@@ -203,7 +203,7 @@ def fix_polygon_rings(rings):
 
     exterior_ring = ensure_closed_ring(rings[0])
 
-    if ring_area(exterior_ring) < 0:
+    if ring_area(exterior_ring) > 0:
         exterior_ring = list(reversed(exterior_ring))
 
     fixed_rings.append(exterior_ring)
@@ -211,7 +211,7 @@ def fix_polygon_rings(rings):
     for hole in rings[1:]:
         hole = ensure_closed_ring(hole)
 
-        if ring_area(hole) > 0:
+        if ring_area(hole) < 0:
             hole = list(reversed(hole))
 
         fixed_rings.append(hole)
