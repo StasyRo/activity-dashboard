@@ -204,7 +204,6 @@ no_disability_values = [
 ""
 ]
 
-
 return dataframe[~dataframe["Disability"].isin(no_disability_values)].shape[0]
 
 
