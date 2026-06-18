@@ -890,9 +890,14 @@ returnee_count = count_displacement_exact(
 pwd_count = count_disability(filtered_df)
 
 total_eur = filtered_df["Receive Amount EUR"].sum()
-average_eur = filtered_df["Receive Amount EUR"].mean() if total_count > 0 else 0
-median_eur = filtered_df["Receive Amount EUR"].median() if total_count > 0 else 0
+cash_df = filtered_df[
+filtered_df["Activity"] == "Cash for Protection"
+]
 
+cash_count = len(cash_df)
+total_cash_eur = cash_df["Receive Amount EUR"].sum()
+average_cash_eur = cash_df["Receive Amount EUR"].mean() if cash_count > 0 else 0
+median_cash_eur = cash_df["Receive Amount EUR"].median() if cash_count > 0 else 0
 
 st.markdown('<div class="section-title">Key figures</div>', unsafe_allow_html=True)
 
@@ -905,10 +910,10 @@ with kpi2:
     render_card("💶", "Total received EUR", format_eur(total_eur))
 
 with kpi3:
-    render_card("📊", "Average EUR per client", format_eur(average_eur))
+    render_card("📊", "Average EUR per client", format_eur(average_cash_eur))
 
 with kpi4:
-    render_card("🎯", "Median EUR per client", format_eur(median_eur))
+    render_card("🎯", "Median EUR per client", format_eur(median_cash_eur))
 
 
 kpi5, kpi6, kpi7, kpi8 = st.columns(4)
