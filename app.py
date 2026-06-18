@@ -23,7 +23,6 @@ color: #111827;
 margin-bottom: 0px;
 }
 
-```
 .main-subtitle {
     font-size: 15px;
     color: #6b7280;
@@ -102,7 +101,6 @@ margin-bottom: 0px;
 </style>
 """,
 unsafe_allow_html=True
-```
 
 )
 
@@ -122,7 +120,7 @@ if not DATA_FILE.exists():
 st.error("Excel file Data.xlsx was not found.")
 st.stop()
 
-```
+
 data = pd.read_excel(DATA_FILE, engine="openpyxl")
 data.columns = data.columns.str.strip()
 
@@ -165,7 +163,7 @@ for col in text_columns:
 data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
 
 return data
-```
+
 
 def normalize_text(value):
 value = str(value).lower().strip()
@@ -195,7 +193,7 @@ return dataframe[displacement_clean.isin(clean_values)].shape[0]
 def count_disability(dataframe):
 disability_clean = dataframe["Disability"].apply(normalize_text)
 
-```
+
 no_disability_values = [
     "no",
     "none",
@@ -205,7 +203,7 @@ no_disability_values = [
 ]
 
 return dataframe[~disability_clean.isin(no_disability_values)].shape[0]
-```
+
 
 def make_bar(dataframe, group_column, title, top_n=None):
 summary = (
@@ -215,7 +213,7 @@ dataframe.groupby(group_column, dropna=False)
 .sort_values("Clients", ascending=False)
 )
 
-```
+
 if top_n is not None:
     summary = summary.head(top_n)
 
@@ -257,7 +255,7 @@ fig.update_yaxes(
 )
 
 st.plotly_chart(fig, use_container_width=True)
-```
+
 
 df = load_data()
 
@@ -276,7 +274,7 @@ valid_dates = df["Date"].dropna()
 with st.sidebar.container(border=True):
 st.markdown("### 📅 Date period")
 
-```
+
 if not valid_dates.empty:
     min_date = valid_dates.min().date()
     max_date = valid_dates.max().date()
@@ -298,12 +296,12 @@ else:
     start_date = None
     end_date = None
     st.info("No valid dates found.")
-```
+
 
 with st.sidebar.container(border=True):
 st.markdown("### 📍 Location")
 
-```
+
 oblasts = get_options(df, "Oblast")
 rayons = get_options(df, "Rayon")
 
@@ -318,12 +316,12 @@ selected_rayons = st.multiselect(
     rayons,
     default=rayons
 )
-```
+
 
 with st.sidebar.container(border=True):
 st.markdown("### 💰 Donor")
 
-```
+
 donors = get_options(df, "Donor number")
 
 selected_donors = st.multiselect(
@@ -343,12 +341,12 @@ selected_activities = st.multiselect(
     default=activities,
     label_visibility="collapsed"
 )
-```
+
 
 with st.sidebar.container(border=True):
 st.markdown("### 👥 Participant profile")
 
-```
+
 gender = get_options(df, "Gender")
 displacement = get_options(df, "Displacement")
 disability = get_options(df, "Disability")
@@ -377,7 +375,7 @@ selected_actdis = st.multiselect(
     actdis,
     default=actdis
 )
-```
+
 
 filtered_df = df[
 df["Oblast"].isin(selected_oblasts) &
@@ -395,12 +393,12 @@ if start_date > end_date:
 st.error("Start date cannot be later than end date.")
 st.stop()
 
-```
+
 filtered_df = filtered_df[
     (filtered_df["Date"].dt.date >= start_date) &
     (filtered_df["Date"].dt.date <= end_date)
 ]
-```
+
 
 total_count = len(filtered_df)
 female_count = count_gender(filtered_df, "female")
@@ -483,7 +481,7 @@ tab_map, tab_overview, tab_location, tab_profile, tab_data = st.tabs([
 with tab_map:
 st.subheader("Map")
 
-```
+
 st.markdown(
     """
     <div class="map-placeholder">
@@ -498,7 +496,7 @@ st.markdown(
 )
 
 st.info("Next step: connect a valid GeoJSON file and make the map interactive.")
-```
+
 
 with tab_overview:
 make_bar(filtered_df, "Donor number", "Clients by donor")
@@ -518,7 +516,7 @@ with tab_data:
 st.subheader("Detailed data")
 st.dataframe(filtered_df, use_container_width=True)
 
-```
+
 csv = filtered_df.to_csv(index=False).encode("utf-8-sig")
 
 st.download_button(
@@ -527,4 +525,4 @@ st.download_button(
     file_name="filtered_activity_data.csv",
     mime="text/csv"
 )
-```
+
