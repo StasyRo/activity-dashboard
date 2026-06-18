@@ -369,6 +369,7 @@ def make_bar(dataframe, group_column, title, top_n=None):
 
 
 df = load_data()
+
 geojson = load_geojson()
 
 
