@@ -175,7 +175,107 @@ def load_data():
 
     return data
 
+@st.cache_data
+def load_geojson():
+    if not GEOJSON_FILE.exists():
+        st.error("GeoJSON file ukraine_rayons_en.geojson was not found.")
+        st.stop()
 
+    with open(GEOJSON_FILE, "r", encoding="utf-8") as file:
+        geojson = json.load(file)
+
+    for feature in geojson["features"]:
+        props = feature.get("properties", {})
+
+        original_name = (
+            props.get("Rayon")
+            or props.get("rayon")
+            or props.get("name")
+            or props.get("Name")
+            or props.get("NAME_2")
+            or ""
+        )
+
+        feature["properties"]["rayon_name"] = str(original_name).strip()
+        feature["properties"]["rayon_key"] = str(original_name).strip().lower()
+
+    return geojson
+
+
+def build_map_data(dataframe, geojson):
+    rayon_summary = (
+        dataframe.groupby("Rayon", dropna=False)
+        .size()
+        .reset_index(name="Clients")
+    )
+
+    rayon_summary["Rayon"] = rayon_summary["Rayon"].astype(str).str.strip()
+    rayon_summary["rayon_key"] = rayon_summary["Rayon"].str.lower()
+
+    geo_records = []
+    for feature in geojson["features"]:
+        geo_records.append({
+            "rayon_key": feature["properties"].get("rayon_key", ""),
+            "rayon_name": feature["properties"].get("rayon_name", "")
+        })
+
+    geo_df = pd.DataFrame(geo_records).drop_duplicates()
+
+    map_df = geo_df.merge(
+        rayon_summary,
+        on="rayon_key",
+        how="left"
+    )
+
+    map_df["Clients"] = map_df["Clients"].fillna(0).astype(int)
+    map_df["Rayon"] = map_df["Rayon"].fillna(map_df["rayon_name"])
+
+    return map_df
+
+
+def show_map(dataframe, geojson):
+    map_df = build_map_data(dataframe, geojson)
+
+    max_clients = max(1, int(map_df["Clients"].max()))
+
+    fig = px.choropleth(
+        map_df,
+        geojson=geojson,
+        locations="rayon_key",
+        featureidkey="properties.rayon_key",
+        color="Clients",
+        hover_name="Rayon",
+        hover_data={"Clients": True, "rayon_key": False},
+        color_continuous_scale=[
+            [0.0, "#fff7ed"],
+            [0.5, "#fdba74"],
+            [1.0, "#ea580c"]
+        ],
+        range_color=(0, max_clients)
+    )
+
+    fig.update_traces(
+        marker_line_color="white",
+        marker_line_width=0.8,
+        hovertemplate="<b>%{hovertext}</b><br>Clients: %{z}<extra></extra>"
+    )
+
+    fig.update_geos(
+        fitbounds="locations",
+        visible=False,
+        showcountries=False,
+        showcoastlines=False,
+        showframe=False,
+        bgcolor="rgba(0,0,0,0)"
+    )
+
+    fig.update_layout(
+        height=700,
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        coloraxis_colorbar_title="Clients"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 
 
@@ -269,6 +369,7 @@ def make_bar(dataframe, group_column, title, top_n=None):
 
 
 df = load_data()
+geojson = load_geojson()
 
 
 st.sidebar.markdown(
@@ -493,22 +594,10 @@ tab_map, tab_overview, tab_location, tab_profile = st.tabs([
 
 
 with tab_map:
-    st.subheader("Map")
+    st.subheader("Map of Ukraine by rayon")
+    st.caption("Rayons with more clients are shown in darker orange.")
 
-    st.markdown(
-        """
-        <div class="map-placeholder">
-            <div class="map-placeholder-icon">🗺️</div>
-            <div class="map-placeholder-title">Map will be added here</div>
-            <div class="map-placeholder-text">
-                This tab is reserved for the interactive Ukraine rayon map.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.info("Next step: connect a valid GeoJSON file and make the map interactive.")
+    show_map(filtered_df, geojson)
 
 
 with tab_overview:
