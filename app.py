@@ -276,12 +276,26 @@ def make_bar(dataframe, group_column, title):
         marker_line_width=0.8
     )
 
-    fig.update_layout(
-        xaxis_title="",
-        yaxis_title="Participants",
-        title_font_size=20,
-        margin=dict(l=20, r=20, t=60, b=20)
-    )
+   fig.update_traces(
+    textfont=dict(color="black", size=13)
+)
+
+fig.update_layout(
+    xaxis_title="",
+    yaxis_title="Participants",
+    title_font_size=20,
+    title_font_color="black",
+    font=dict(color="black"),
+    xaxis=dict(
+        tickfont=dict(color="black"),
+        titlefont=dict(color="black")
+    ),
+    yaxis=dict(
+        tickfont=dict(color="black"),
+        titlefont=dict(color="black")
+    ),
+    margin=dict(l=20, r=20, t=60, b=20)
+)
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -312,13 +326,28 @@ def make_horizontal_bar(dataframe, group_column, title, top_n=20):
         marker_line_width=0.8
     )
 
-    fig.update_layout(
-        yaxis={"categoryorder": "total ascending"},
-        xaxis_title="Participants",
-        yaxis_title="",
-        title_font_size=20,
-        margin=dict(l=20, r=20, t=60, b=20)
-    )
+    fig.update_traces(
+    textfont=dict(color="black", size=13)
+)
+
+fig.update_layout(
+    yaxis={"categoryorder": "total ascending"},
+    xaxis_title="Participants",
+    yaxis_title="",
+    title_font_size=20,
+    title_font_color="black",
+    font=dict(color="black"),
+    xaxis=dict(
+        tickfont=dict(color="black"),
+        titlefont=dict(color="black")
+    ),
+    yaxis=dict(
+        tickfont=dict(color="black"),
+        titlefont=dict(color="black"),
+        categoryorder="total ascending"
+    ),
+    margin=dict(l=20, r=20, t=60, b=20)
+)
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -342,14 +371,20 @@ def make_pie(dataframe, group_column, title):
     )
 
     fig.update_traces(
-        textinfo="percent+label",
-        marker=dict(line=dict(color="white", width=1))
-    )
+    textinfo="percent+label",
+    textfont=dict(color="black", size=13),
+    marker=dict(line=dict(color="white", width=1))
+)
 
-    fig.update_layout(
-        title_font_size=20,
-        margin=dict(l=20, r=20, t=60, b=20)
-    )
+fig.update_layout(
+    title_font_size=20,
+    title_font_color="black",
+    font=dict(color="black"),
+    legend=dict(
+        font=dict(color="black")
+    ),
+    margin=dict(l=20, r=20, t=60, b=20)
+)
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -415,18 +450,23 @@ with st.sidebar.container(border=True):
     st.markdown("### 💰 Donor")
 
     donors = get_options(df, "Donor number")
-    activities = get_options(df, "Activity")
 
     selected_donors = st.multiselect(
         "Donor number",
         donors,
-        default=donors
+        default=donors,
+        label_visibility="collapsed"
     )
+
+    st.markdown("### 🤝 Activity")
+
+    activities = get_options(df, "Activity")
 
     selected_activities = st.multiselect(
         "Activity",
         activities,
-        default=activities
+        default=activities,
+        label_visibility="collapsed"
     )
 
 
@@ -501,10 +541,10 @@ with row1_col1:
     render_card("👥", "Total participants", total_count)
 
 with row1_col2:
-    render_card("👩", "Women / girls", female_count)
+    render_card("👩", "Women", female_count)
 
 with row1_col3:
-    render_card("👨", "Men / boys", male_count)
+    render_card("👨", "Men", male_count)
 
 
 row2_col1, row2_col2, row2_col3 = st.columns(3)
