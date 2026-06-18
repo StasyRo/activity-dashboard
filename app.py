@@ -236,22 +236,24 @@ def count_disability(dataframe):
     return dataframe[~disability_clean.isin(no_disability_values)].shape[0]
 
 
-def make_bar(dataframe, group_column, title):
+def make_horizontal_bar(dataframe, group_column, title, top_n=20):
     summary = (
         dataframe.groupby(group_column, dropna=False)
         .size()
         .reset_index(name="Participants")
         .sort_values("Participants", ascending=False)
+        .head(top_n)
     )
 
     summary[group_column] = summary[group_column].astype(str)
 
     fig = px.bar(
         summary,
-        x=group_column,
-        y="Participants",
+        x="Participants",
+        y=group_column,
         text="Participants",
         title=title,
+        orientation="h",
         color_discrete_sequence=[CHART_COLOR]
     )
 
@@ -262,20 +264,24 @@ def make_bar(dataframe, group_column, title):
     )
 
     fig.update_layout(
-        xaxis_title="",
-        yaxis_title="Participants",
-        title_font_size=20,
-        title_font_color="black",
+        title=dict(
+            text=title,
+            font=dict(size=20, color="black")
+        ),
         font=dict(color="black"),
-        xaxis=dict(
-            tickfont=dict(color="black"),
-            titlefont=dict(color="black")
-        ),
-        yaxis=dict(
-            tickfont=dict(color="black"),
-            titlefont=dict(color="black")
-        ),
         margin=dict(l=20, r=20, t=60, b=20)
+    )
+
+    fig.update_xaxes(
+        title_text="Participants",
+        tickfont=dict(color="black"),
+        title_font=dict(color="black")
+    )
+
+    fig.update_yaxes(
+        title_text="",
+        tickfont=dict(color="black"),
+        categoryorder="total ascending"
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -354,8 +360,10 @@ def make_pie(dataframe, group_column, title):
     )
 
     fig.update_layout(
-        title_font_size=20,
-        title_font_color="black",
+        title=dict(
+            text=title,
+            font=dict(size=20, color="black")
+        ),
         font=dict(color="black"),
         legend=dict(
             font=dict(color="black")
