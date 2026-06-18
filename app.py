@@ -341,7 +341,7 @@ with st.sidebar.container(border=True):
         label_visibility="collapsed"
     )
 
-    st.markdown("### 🤝 Activity")
+    st.markdown("### 📋 Activity")
 
     activities = get_options(df, "Activity")
 
@@ -474,7 +474,7 @@ with row4_col1:
     render_card("💰", "Donors", filtered_df["Donor number"].nunique())
 
 with row4_col2:
-    render_card("🤝", "Activities", filtered_df["Activity"].nunique())
+    render_card("📋", "Activities", filtered_df["Activity"].nunique())
 
 
 st.divider()
