@@ -625,7 +625,7 @@ def show_map(dataframe, geojson):
                 <div class="map-placeholder-icon">🗺️</div>
                 <div class="map-placeholder-title">Map file is not ready</div>
                 <div class="map-placeholder-text">
-                    Please check that rayons_en2.geojson is a valid GeoJSON file.
+                    Please check that rayons_en.geojson is a valid GeoJSON file.
                 </div>
             </div>
             """,
