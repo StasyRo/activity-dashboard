@@ -189,10 +189,10 @@ def render_card(icon, title, value):
 
 
 def count_gender(dataframe, gender_value):
-return dataframe[dataframe["Gender"] == gender_value].shape[0]
+    return dataframe[dataframe["Gender"] == gender_value].shape[0]
 
 def count_displacement_exact(dataframe, values):
-return dataframe[dataframe["Displacement"].isin(values)].shape[0]
+    return dataframe[dataframe["Displacement"].isin(values)].shape[0]
 
 def count_disability(dataframe):
 no_disability_values = [
