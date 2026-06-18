@@ -102,7 +102,6 @@ margin-bottom: 0px;
 </style>
 """,
 unsafe_allow_html=True
-```
 
 )
 
