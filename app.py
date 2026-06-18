@@ -382,7 +382,7 @@ with st.sidebar.container(border=True):
 
 
 with st.sidebar.container(border=True):
-    st.markdown("### 🏛️ Programme")
+    st.markdown("### 💰 Donor")
 
     donors = get_options(df, "Donor number")
     activities = get_options(df, "Activity")
