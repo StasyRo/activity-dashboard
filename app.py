@@ -189,28 +189,25 @@ def render_card(icon, title, value):
 
 
 def count_gender(dataframe, gender_value):
-    gender_clean = dataframe["Gender"].apply(normalize_text)
-    return dataframe[gender_clean == normalize_text(gender_value)].shape[0]
-
+return dataframe[dataframe["Gender"] == gender_value].shape[0]
 
 def count_displacement_exact(dataframe, values):
-    displacement_clean = dataframe["Displacement"].apply(normalize_text)
-    clean_values = [normalize_text(value) for value in values]
-    return dataframe[displacement_clean.isin(clean_values)].shape[0]
-
+return dataframe[dataframe["Displacement"].isin(values)].shape[0]
 
 def count_disability(dataframe):
-    disability_clean = dataframe["Disability"].apply(normalize_text)
+no_disability_values = [
+"No",
+"no",
+"None",
+"none",
+"Not specified",
+""
+]
 
-    no_disability_values = [
-        "no",
-        "none",
-        "not_specified",
-        "",
-        "nan"
-    ]
+```
+return dataframe[~dataframe["Disability"].isin(no_disability_values)].shape[0]
+```
 
-    return dataframe[~disability_clean.isin(no_disability_values)].shape[0]
 
 
 def make_bar(dataframe, group_column, title, top_n=None):
