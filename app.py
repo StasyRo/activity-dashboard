@@ -250,7 +250,7 @@ for feature in geojson["features"]:
     feature["properties"]["rayon_name"] = str(original_name).strip()
     feature["properties"]["rayon_key"] = str(original_name).strip().lower()
 
-return geojson
+    return geojson
 
 
 def build_map_data(dataframe, geojson):
