@@ -194,7 +194,7 @@ return ring
 
 def fix_polygon_rings(rings):
     if not rings:
-return rings
+    return rings
 
 fixed_rings = []
 
