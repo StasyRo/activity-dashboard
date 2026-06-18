@@ -178,11 +178,38 @@ def load_data():
 @st.cache_data
 def load_geojson():
     if not GEOJSON_FILE.exists():
-        st.error("GeoJSON file ukraine_rayons_en.geojson was not found.")
+        st.error(f"GeoJSON file {GEOJSON_FILE} was not found.")
         st.stop()
 
     with open(GEOJSON_FILE, "r", encoding="utf-8") as file:
-        geojson = json.load(file)
+        geojson_raw = json.load(file)
+
+    if isinstance(geojson_raw, dict) and "features" in geojson_raw:
+        geojson = geojson_raw
+
+    elif isinstance(geojson_raw, list):
+        geojson = {
+            "type": "FeatureCollection",
+            "features": geojson_raw
+        }
+
+    elif isinstance(geojson_raw, dict) and geojson_raw.get("type") == "Feature":
+        geojson = {
+            "type": "FeatureCollection",
+            "features": [geojson_raw]
+        }
+
+    else:
+        st.error("The map file is not a valid GeoJSON FeatureCollection.")
+        st.write("Expected structure:")
+        st.code('{"type": "FeatureCollection", "features": [...]}')
+        st.write("Your file has this structure:")
+        st.write(geojson_raw.keys() if isinstance(geojson_raw, dict) else type(geojson_raw))
+        st.stop()
+
+    if not geojson.get("features"):
+        st.error("GeoJSON file has no features.")
+        st.stop()
 
     for feature in geojson["features"]:
         props = feature.get("properties", {})
@@ -190,9 +217,13 @@ def load_geojson():
         original_name = (
             props.get("Rayon")
             or props.get("rayon")
+            or props.get("rayon_name")
             or props.get("name")
             or props.get("Name")
             or props.get("NAME_2")
+            or props.get("shapeName")
+            or props.get("ADM2_EN")
+            or props.get("ADM2_NAME")
             or ""
         )
 
