@@ -414,12 +414,12 @@ male_count = count_gender(filtered_df, "male")
 
 local_count = count_displacement_exact(
     filtered_df,
-    ["local_population"]
+    ["local population"]
 )
 
 idp_count = count_displacement_exact(
     filtered_df,
-    ["displaced_person"]
+    ["displaced person"]
 )
 
 returnee_count = count_displacement_exact(
