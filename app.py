@@ -195,7 +195,7 @@ def count_displacement_exact(dataframe, values):
     return dataframe[dataframe["Displacement"].isin(values)].shape[0]
 
 def count_disability(dataframe):
-no_disability_values = [
+    no_disability_values = [
 "No",
 "no",
 "None",
