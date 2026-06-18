@@ -161,7 +161,13 @@ def load_data():
     ]
 
     for col in text_columns:
-        data[col] = data[col].fillna("Not specified").astype(str).str.strip()
+    data[col] = (
+        data[col]
+        .fillna("Not specified")
+        .astype(str)
+        .str.strip()
+        .str.replace("_", " ", regex=False)
+    )
 
     data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
 
