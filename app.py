@@ -177,60 +177,80 @@ def load_data():
 
 @st.cache_data
 def load_geojson():
-    if not GEOJSON_FILE.exists():
-        st.error(f"GeoJSON file {GEOJSON_FILE} was not found.")
-        st.stop()
+if not GEOJSON_FILE.exists():
+st.error(f"GeoJSON file {GEOJSON_FILE} was not found.")
+st.stop()
 
-    with open(GEOJSON_FILE, "r", encoding="utf-8") as file:
-        geojson_raw = json.load(file)
+with open(GEOJSON_FILE, "r", encoding="utf-8-sig") as file:
+    raw_text = file.read().strip()
 
-    if isinstance(geojson_raw, dict) and "features" in geojson_raw:
-        geojson = geojson_raw
+if not raw_text:
+    st.error(f"The file {GEOJSON_FILE} is empty.")
+    st.stop()
 
-    elif isinstance(geojson_raw, list):
-        geojson = {
-            "type": "FeatureCollection",
-            "features": geojson_raw
-        }
+if raw_text.startswith("<"):
+    st.error(
+        f"The file {GEOJSON_FILE} looks like an HTML page, not a GeoJSON file."
+    )
+    st.write("You probably uploaded a GitHub page instead of the raw GeoJSON file.")
+    st.stop()
 
-    elif isinstance(geojson_raw, dict) and geojson_raw.get("type") == "Feature":
-        geojson = {
-            "type": "FeatureCollection",
-            "features": [geojson_raw]
-        }
+try:
+    geojson_raw = json.loads(raw_text)
+except json.JSONDecodeError as error:
+    st.error(f"The file {GEOJSON_FILE} is not valid JSON / GeoJSON.")
+    st.write(f"JSON error: line {error.lineno}, column {error.colno}")
+    st.write("First characters of the file:")
+    st.code(raw_text[:300])
+    st.stop()
 
-    else:
-        st.error("The map file is not a valid GeoJSON FeatureCollection.")
-        st.write("Expected structure:")
-        st.code('{"type": "FeatureCollection", "features": [...]}')
-        st.write("Your file has this structure:")
-        st.write(geojson_raw.keys() if isinstance(geojson_raw, dict) else type(geojson_raw))
-        st.stop()
+if isinstance(geojson_raw, dict) and "features" in geojson_raw:
+    geojson = geojson_raw
 
-    if not geojson.get("features"):
-        st.error("GeoJSON file has no features.")
-        st.stop()
+elif isinstance(geojson_raw, list):
+    geojson = {
+        "type": "FeatureCollection",
+        "features": geojson_raw
+    }
 
-    for feature in geojson["features"]:
-        props = feature.get("properties", {})
+elif isinstance(geojson_raw, dict) and geojson_raw.get("type") == "Feature":
+    geojson = {
+        "type": "FeatureCollection",
+        "features": [geojson_raw]
+    }
 
-        original_name = (
-            props.get("Rayon")
-            or props.get("rayon")
-            or props.get("rayon_name")
-            or props.get("name")
-            or props.get("Name")
-            or props.get("NAME_2")
-            or props.get("shapeName")
-            or props.get("ADM2_EN")
-            or props.get("ADM2_NAME")
-            or ""
-        )
+else:
+    st.error("The map file is not a valid GeoJSON FeatureCollection.")
+    st.write("Expected structure:")
+    st.code('{"type": "FeatureCollection", "features": [...]}')
+    st.write("Your file has this structure:")
+    st.write(geojson_raw.keys() if isinstance(geojson_raw, dict) else type(geojson_raw))
+    st.stop()
 
-        feature["properties"]["rayon_name"] = str(original_name).strip()
-        feature["properties"]["rayon_key"] = str(original_name).strip().lower()
+if not geojson.get("features"):
+    st.error("GeoJSON file has no features.")
+    st.stop()
 
-    return geojson
+for feature in geojson["features"]:
+    props = feature.get("properties", {})
+
+    original_name = (
+        props.get("Rayon")
+        or props.get("rayon")
+        or props.get("rayon_name")
+        or props.get("name")
+        or props.get("Name")
+        or props.get("NAME_2")
+        or props.get("shapeName")
+        or props.get("ADM2_EN")
+        or props.get("ADM2_NAME")
+        or ""
+    )
+
+    feature["properties"]["rayon_name"] = str(original_name).strip()
+    feature["properties"]["rayon_key"] = str(original_name).strip().lower()
+
+return geojson
 
 
 def build_map_data(dataframe, geojson):
