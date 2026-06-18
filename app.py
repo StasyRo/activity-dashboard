@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 DATA_FILE = Path("Data.xlsx")
-GEOJSON_FILE = Path("rayons_en2.geojson")
+GEOJSON_FILE = Path("rayons_en.geojson")
 SHEET_NAME = "TotalF"
 
 CHART_COLOR = "#F4C21A"
@@ -645,7 +645,7 @@ def show_map(dataframe, geojson):
                 <div class="map-placeholder-icon">🗺️</div>
                 <div class="map-placeholder-title">Map file is not ready</div>
                 <div class="map-placeholder-text">
-                    Please check that rayons_en2.geojson is a valid GeoJSON file.
+                    Please check that rayons_en.geojson is a valid GeoJSON file.
                 </div>
             </div>
             """,
