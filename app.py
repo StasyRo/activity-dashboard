@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 DATA_FILE = Path("Data.xlsx")
-GEOJSON_FILE = Path("rayons_en2.geojson")
+GEOJSON_FILE = Path("rayons_en.geojson")
 
 CHART_COLOR = "#F4C21A"
 
