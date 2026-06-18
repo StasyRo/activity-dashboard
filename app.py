@@ -178,8 +178,8 @@ def load_data():
 @st.cache_data
 def load_geojson():
     if not GEOJSON_FILE.exists():
-    st.error(f"GeoJSON file {GEOJSON_FILE} was not found.")
-    st.stop()
+        st.error(f"GeoJSON file {GEOJSON_FILE} was not found.")
+        st.stop()
 
 with open(GEOJSON_FILE, "r", encoding="utf-8-sig") as file:
     raw_text = file.read().strip()
