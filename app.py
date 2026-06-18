@@ -238,14 +238,6 @@ def load_data():
 
     data["Date"] = pd.to_datetime(data["Date"], errors="coerce")
 
-    data["Receive Amount EUR"] = (
-        data["Receive Amount EUR"]
-        .astype(str)
-        .str.replace("€", "", regex=False)
-        .str.replace(" ", "", regex=False)
-        .str.replace(",", ".", regex=False)
-    )
-
     data["Receive Amount EUR"] = pd.to_numeric(
         data["Receive Amount EUR"],
         errors="coerce"
