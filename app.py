@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 DATA_FILE = Path("Data.xlsx")
-GEOJSON_FILE = Path("rayons_en.geojson")
+GEOJSON_FILE = Path("rayons_en2.geojson")
 
 CHART_COLOR = "#F4C21A"
 
@@ -176,64 +176,69 @@ def load_data():
 
     return data
 
+
 def ring_area(ring):
     area = 0.0
 
-for i in range(len(ring) - 1):
-    x1, y1 = ring[i][0], ring[i][1]
-    x2, y2 = ring[i + 1][0], ring[i + 1][1]
-    area += (x1 * y2) - (x2 * y1)
-    
+    for i in range(len(ring) - 1):
+        x1, y1 = ring[i][0], ring[i][1]
+        x2, y2 = ring[i + 1][0], ring[i + 1][1]
+        area += (x1 * y2) - (x2 * y1)
+
     return area / 2
+
 
 def ensure_closed_ring(ring):
     if ring and ring[0] != ring[-1]:
         ring = ring + [ring[0]]
 
-return ring
+    return ring
+
 
 def fix_polygon_rings(rings):
     if not rings:
         return rings
 
-fixed_rings = []
+    fixed_rings = []
 
-exterior_ring = ensure_closed_ring(rings[0])
+    exterior_ring = ensure_closed_ring(rings[0])
 
-if ring_area(exterior_ring) < 0:
-    exterior_ring = list(reversed(exterior_ring))
+    if ring_area(exterior_ring) < 0:
+        exterior_ring = list(reversed(exterior_ring))
 
-fixed_rings.append(exterior_ring)
+    fixed_rings.append(exterior_ring)
 
-for hole in rings[1:]:
-    hole = ensure_closed_ring(hole)
+    for hole in rings[1:]:
+        hole = ensure_closed_ring(hole)
 
-    if ring_area(hole) > 0:
-        hole = list(reversed(hole))
+        if ring_area(hole) > 0:
+            hole = list(reversed(hole))
 
-    fixed_rings.append(hole)
+        fixed_rings.append(hole)
 
-return fixed_rings
+    return fixed_rings
+
 
 def fix_geojson_winding(geojson):
     for feature in geojson["features"]:
         geometry = feature.get("geometry")
 
-    if not geometry:
-        continue
+        if not geometry:
+            continue
 
-    if geometry["type"] == "Polygon":
-        geometry["coordinates"] = fix_polygon_rings(
-            geometry["coordinates"]
-        )
+        if geometry["type"] == "Polygon":
+            geometry["coordinates"] = fix_polygon_rings(
+                geometry["coordinates"]
+            )
 
-    elif geometry["type"] == "MultiPolygon":
-        geometry["coordinates"] = [
-            fix_polygon_rings(polygon)
-            for polygon in geometry["coordinates"]
-        ]
+        elif geometry["type"] == "MultiPolygon":
+            geometry["coordinates"] = [
+                fix_polygon_rings(polygon)
+                for polygon in geometry["coordinates"]
+            ]
 
-return geojson
+    return geojson
+
 
 @st.cache_data
 def load_geojson():
@@ -305,6 +310,8 @@ def load_geojson():
         feature["properties"]["rayon_name"] = str(original_name).strip()
         feature["properties"]["rayon_key"] = str(original_name).strip().lower()
 
+    geojson = fix_geojson_winding(geojson)
+
     return geojson
 
 
@@ -346,64 +353,66 @@ def show_map(dataframe, geojson):
 
     fig = go.Figure()
 
-    fig.add_trace( 
-        go.Choropleth( 
-            geojson=geojson, 
-            locations=map_df["rayon_key"], 
-            z=[0] * len(map_df), 
-            featureidkey="properties.rayon_key", 
-            colorscale=[ 
-                [0, "rgba(255,255,255,0)"], 
-                [1, "rgba(255,255,255,0)"] 
-            ], 
-            marker_line_color="#9ca3af", 
-            marker_line_width=0.5, 
-            showscale=False, 
-            hoverinfo="skip" 
-        ) 
-    ) 
-    
-    if not active_df.empty: 
-        max_clients = max(1, int(active_df["Clients"].max())) 
-        
-        fig.add_trace( 
-            go.Choropleth( 
-                geojson=geojson, 
-                locations=active_df["rayon_key"], 
-                z=active_df["Clients"], 
-                featureidkey="properties.rayon_key", 
-                colorscale=[ 
-                    [0.0, "#fed7aa"], 
-                    [0.5, "#fb923c"], 
-                    [1.0, "#c2410c"] 
-                ], 
-                zmin=0, 
-                zmax=max_clients, 
-                marker_line_color="white", 
-                marker_line_width=0.8, 
-                colorbar_title="Clients", 
-                text=active_df["Rayon"], 
-                hovertemplate="<b>%{text}</b><br>Clients: %{z}<extra></extra>" 
-            ) 
-        ) 
-        
-        fig.update_geos( 
-            fitbounds="geojson", 
-            visible=False, 
-            showcountries=False, 
-            showcoastlines=False, 
-            showframe=False, 
-            bgcolor="rgba(0,0,0,0)" 
-        ) 
-        
-        fig.update_layout( 
-            height=700, 
-            margin={"r": 0, "t": 0, "l": 0, "b": 0}, 
-            paper_bgcolor="white", 
-            plot_bgcolor="white" 
-        ) 
-        
-        st.plotly_chart(fig, use_container_width=True)
+    fig.add_trace(
+        go.Choropleth(
+            geojson=geojson,
+            locations=map_df["rayon_key"],
+            z=[0] * len(map_df),
+            featureidkey="properties.rayon_key",
+            colorscale=[
+                [0, "rgba(255,255,255,0)"],
+                [1, "rgba(255,255,255,0)"]
+            ],
+            marker_line_color="#9ca3af",
+            marker_line_width=0.5,
+            showscale=False,
+            hoverinfo="skip"
+        )
+    )
+
+    if not active_df.empty:
+        max_clients = max(1, int(active_df["Clients"].max()))
+
+        fig.add_trace(
+            go.Choropleth(
+                geojson=geojson,
+                locations=active_df["rayon_key"],
+                z=active_df["Clients"],
+                featureidkey="properties.rayon_key",
+                colorscale=[
+                    [0.0, "#fed7aa"],
+                    [0.5, "#fb923c"],
+                    [1.0, "#c2410c"]
+                ],
+                zmin=1,
+                zmax=max_clients,
+                marker_line_color="white",
+                marker_line_width=0.8,
+                colorbar_title="Clients",
+                text=active_df["Rayon"],
+                hovertemplate="<b>%{text}</b><br>Clients: %{z}<extra></extra>"
+            )
+        )
+
+    fig.update_geos(
+        visible=False,
+        showcountries=False,
+        showcoastlines=False,
+        showframe=False,
+        bgcolor="rgba(0,0,0,0)",
+        projection_type="mercator",
+        lonaxis_range=[22, 41],
+        lataxis_range=[44, 53]
+    )
+
+    fig.update_layout(
+        height=700,
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        paper_bgcolor="white",
+        plot_bgcolor="white"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def get_options(dataframe, column):
