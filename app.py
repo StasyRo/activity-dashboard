@@ -531,7 +531,7 @@ with row3_col3:
     st.empty()
 
 
-row4_col1, row4_col2, row4_col3 = st.columns(3)
+row4_col1, row4_col2 = st.columns(2)
 
 with row4_col1:
     render_card("💰", "Donors", filtered_df["Donor number"].nunique())
@@ -539,8 +539,6 @@ with row4_col1:
 with row4_col2:
     render_card("📋", "Activities", filtered_df["Activity"].nunique())
 
-with row4_col3:
-    st.empty()
 
 
 st.divider()
