@@ -50,6 +50,7 @@ st.markdown(
         text-align: center;
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
         min-height: 135px;
+        margin-bottom: 14px;
     }
 
     .metric-icon {
@@ -173,6 +174,13 @@ def load_data():
     return data
 
 
+def normalize_text(value):
+    value = str(value).lower().strip()
+    value = value.replace("-", "_")
+    value = value.replace(" ", "_")
+    return value
+
+
 def get_options(dataframe, column):
     return sorted(dataframe[column].dropna().astype(str).unique().tolist())
 
@@ -191,49 +199,75 @@ def render_card(icon, title, value):
 
 
 def count_gender(dataframe, gender_value):
-    gender_clean = (
-        dataframe["Gender"]
-        .fillna("")
-        .astype(str)
-        .str.lower()
-        .str.strip()
-    )
-
-    return dataframe[gender_clean == gender_value.lower()].shape[0]
+    gender_clean = dataframe["Gender"].apply(normalize_text)
+    return dataframe[gender_clean == normalize_text(gender_value)].shape[0]
 
 
 def count_displacement_exact(dataframe, values):
-    displacement_clean = (
-        dataframe["Displacement"]
-        .fillna("")
-        .astype(str)
-        .str.lower()
-        .str.strip()
-    )
-
-    clean_values = [value.lower().strip() for value in values]
-
+    displacement_clean = dataframe["Displacement"].apply(normalize_text)
+    clean_values = [normalize_text(value) for value in values]
     return dataframe[displacement_clean.isin(clean_values)].shape[0]
 
 
 def count_disability(dataframe):
-    disability_clean = (
-        dataframe["Disability"]
-        .fillna("")
-        .astype(str)
-        .str.lower()
-        .str.strip()
-    )
+    disability_clean = dataframe["Disability"].apply(normalize_text)
 
     no_disability_values = [
         "no",
         "none",
-        "not specified",
+        "not_specified",
         "",
         "nan"
     ]
 
     return dataframe[~disability_clean.isin(no_disability_values)].shape[0]
+
+
+def make_bar(dataframe, group_column, title):
+    summary = (
+        dataframe.groupby(group_column, dropna=False)
+        .size()
+        .reset_index(name="Participants")
+        .sort_values("Participants", ascending=False)
+    )
+
+    summary[group_column] = summary[group_column].astype(str)
+
+    fig = px.bar(
+        summary,
+        x=group_column,
+        y="Participants",
+        text="Participants",
+        title=title,
+        color_discrete_sequence=[CHART_COLOR]
+    )
+
+    fig.update_traces(
+        marker_line_color="#D4A514",
+        marker_line_width=0.8,
+        textfont=dict(color="black", size=13)
+    )
+
+    fig.update_layout(
+        title=dict(
+            text=title,
+            font=dict(size=20, color="black")
+        ),
+        font=dict(color="black"),
+        xaxis_title="",
+        yaxis_title="Participants",
+        margin=dict(l=20, r=20, t=60, b=20)
+    )
+
+    fig.update_xaxes(
+        tickfont=dict(color="black")
+    )
+
+    fig.update_yaxes(
+        tickfont=dict(color="black")
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def make_horizontal_bar(dataframe, group_column, title, top_n=20):
@@ -269,67 +303,18 @@ def make_horizontal_bar(dataframe, group_column, title, top_n=20):
             font=dict(size=20, color="black")
         ),
         font=dict(color="black"),
+        xaxis_title="Participants",
+        yaxis_title="",
         margin=dict(l=20, r=20, t=60, b=20)
     )
 
     fig.update_xaxes(
-        title_text="Participants",
-        tickfont=dict(color="black"),
-        title_font=dict(color="black")
+        tickfont=dict(color="black")
     )
 
     fig.update_yaxes(
-        title_text="",
         tickfont=dict(color="black"),
         categoryorder="total ascending"
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-
-def make_horizontal_bar(dataframe, group_column, title, top_n=20):
-    summary = (
-        dataframe.groupby(group_column, dropna=False)
-        .size()
-        .reset_index(name="Participants")
-        .sort_values("Participants", ascending=False)
-        .head(top_n)
-    )
-
-    summary[group_column] = summary[group_column].astype(str)
-
-    fig = px.bar(
-        summary,
-        x="Participants",
-        y=group_column,
-        text="Participants",
-        title=title,
-        orientation="h",
-        color_discrete_sequence=[CHART_COLOR]
-    )
-
-    fig.update_traces(
-        marker_line_color="#D4A514",
-        marker_line_width=0.8,
-        textfont=dict(color="black", size=13)
-    )
-
-    fig.update_layout(
-        xaxis_title="Participants",
-        yaxis_title="",
-        title_font_size=20,
-        title_font_color="black",
-        font=dict(color="black"),
-        xaxis=dict(
-            tickfont=dict(color="black"),
-            titlefont=dict(color="black")
-        ),
-        yaxis=dict(
-            tickfont=dict(color="black"),
-            titlefont=dict(color="black"),
-            categoryorder="total ascending"
-        ),
-        margin=dict(l=20, r=20, t=60, b=20)
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -500,6 +485,10 @@ filtered_df = df[
 ]
 
 if start_date is not None and end_date is not None:
+    if start_date > end_date:
+        st.error("Start date cannot be later than end date.")
+        st.stop()
+
     filtered_df = filtered_df[
         (filtered_df["Date"].dt.date >= start_date) &
         (filtered_df["Date"].dt.date <= end_date)
@@ -513,12 +502,12 @@ male_count = count_gender(filtered_df, "male")
 
 local_count = count_displacement_exact(
     filtered_df,
-    ["non_displaced", "local", "host"]
+    ["non_displaced", "non-displaced", "local", "host"]
 )
 
 idp_count = count_displacement_exact(
     filtered_df,
-    ["displaced_person", "idp", "internally_displaced_person"]
+    ["displaced_person", "displaced person", "idp", "internally_displaced_person"]
 )
 
 returnee_count = count_displacement_exact(
