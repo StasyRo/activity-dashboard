@@ -522,10 +522,10 @@ with row2_col3:
 row3_col1, row3_col2, row3_col3 = st.columns(3)
 
 with row3_col1:
-    render_card("♿", "People with disabilities", pwd_count)
+    st.empty()
 
 with row3_col2:
-    st.empty()
+    render_card("♿", "People with disabilities", pwd_count)
 
 with row3_col3:
     st.empty()
@@ -537,21 +537,9 @@ with row4_col1:
     render_card("💰", "Donors", filtered_df["Donor number"].nunique())
 
 with row4_col2:
-    st.empty()
-
-with row4_col3:
-    st.empty()
-
-
-row5_col1, row5_col2, row5_col3 = st.columns(3)
-
-with row5_col1:
     render_card("📋", "Activities", filtered_df["Activity"].nunique())
 
-with row5_col2:
-    st.empty()
-
-with row5_col3:
+with row4_col3:
     st.empty()
 
 
