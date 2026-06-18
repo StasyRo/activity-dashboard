@@ -161,7 +161,7 @@ def load_data():
     ]
 
     for col in text_columns:
-    data[col] = (
+        data[col] = (
         data[col]
         .fillna("Not specified")
         .astype(str)
